@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding: 60px 20px;
+            background-color: #f8f8f8;
+        }
+
+        .notebook-header {
+            width: 800px;
+            height: 250px;
+            position: relative;
+            border-radius: 12px 25px 25px 12px;
+            overflow: hidden;
+            box-shadow: 10px 15px 30px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* Texture de grain papier réaliste */
+        .notebook-header::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png');
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* L'élastique sur le côté droit */
+        .elastic {
+            position: absolute;
+            right: 60px;
+            top: 0;
+            bottom: 0;
+            width: 14px;
+            background: #222;
+            box-shadow: inset 2px 0 5px rgba(0,0,0,0.3), 3px 0 8px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        /* Reliure discrète à gauche */
+        .spine {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            background: rgba(0,0,0,0.1);
+            border-right: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .content {
+            text-align: center;
+            z-index: 5;
+        }
+
+        .title {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 32px;
+            font-weight: 500;
+            letter-spacing: 18px;
+            color: #222;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .brand {
+            font-family: 'Times New Roman', serif;
+            font-size: 14px;
+            letter-spacing: 6px;
+            color: rgba(0,0,0,0.4);
+            margin-top: 15px;
+            font-variant-caps: all-small-caps;
+        }
+
+        /* Palettes de Couleurs Aesthetic */
+        .nude { background-color: #e8d8c3; }
+        .matcha { background-color: #cfd8bd; }
+        .terracotta { background-color: #d8a48f; }
+        .slate { background-color: #b2bec3; }
+        .blush { background-color: #e7c9c9; }
+    </style>
+</head>
+<body>
+
+    <div class="notebook-header nude">
+        <div class="spine"></div>
+        <div class="content">
+            <h1 class="title">DEAP</h1>
+            <div class="brand">Sōma</div>
+        </div>
+        <div class="elastic"></div>
+    </div>
+
+    <div class="notebook-header matcha">
+        <div class="spine"></div>
+        <div class="content">
+            <h1 class="title">DEAP</h1>
+            <div class="brand">Sōma</div>
+        </div>
+        <div class="elastic" style="background: #3e4a3d;"></div>
+    </div>
+
+    <div class="notebook-header terracotta">
+        <div class="spine"></div>
+        <div class="content">
+            <h1 class="title">DEAP</h1>
+            <div class="brand">Sōma</div>
+        </div>
+        <div class="elastic" style="background: #4a2d22;"></div>
+    </div>
+
+    <div class="notebook-header slate">
+        <div class="spine"></div>
+        <div class="content">
+            <h1 class="title">DEAP</h1>
+            <div class="brand">Sōma</div>
+        </div>
+        <div class="elastic" style="background: #2d3436;"></div>
+    </div>
+
+    <div class="notebook-header blush">
+        <div class="spine"></div>
+        <div class="content">
+            <h1 class="title">DEAP</h1>
+            <div class="brand">Sōma</div>
+        </div>
+        <div class="elastic" style="background: #5a3e3e;"></div>
+    </div>
+
+</body>
+</html>
