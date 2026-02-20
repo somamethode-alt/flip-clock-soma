@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --soma-dark: #2d3436; --soma-beige: #e8d8c3; --soma-matcha: #cfd8bd; 
+            --soma-absent: #e7c9c9; --soma-extra: #b2bec3; --soma-white: #ffffff;
+            --soma-night: #1e272e;
+            --bloc1: #d1d8c5; --bloc2: #c5d1d8; --bloc3: #d8cfc5; --bloc4: #d1d1d1; --bloc5: #d8c5c5;
+            --current-bg: var(--soma-white); --current-header: var(--soma-beige);
+            --current-text: var(--soma-dark); --card-bg: #ffffff;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--current-bg); margin: 0; padding: 20px; color: var(--current-text); transition: all 0.3s ease; }
+        
+        .controls { position: fixed; top: 10px; right: 10px; display: flex; gap: 8px; z-index: 1000; }
+        .theme-btn { width: 18px; height: 18px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; }
+        .reset-btn { background: #ff7675; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; }
+
+        .notebook-header { width: 100%; height: 100px; background-color: var(--current-header); border-radius: 10px 25px 25px 10px; display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 15px;}
+        .profile-container { position: absolute; left: 15px; width: 70px; height: 70px; border-radius: 50%; background: #f0f0f0; border: 3px solid white; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .profile-container img { width: 100%; height: 100%; object-fit: cover; }
+        .header-text { letter-spacing: 5px; text-transform: uppercase; font-weight: 300; font-size: 18px; }
+
+        .section-card { background: var(--card-bg); border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .dashboard-grid { display: grid; grid-template-columns: 150px 1fr; gap: 20px; align-items: center; }
+        .circular-progress { width: 130px; height: 130px; border-radius: 50%; background: conic-gradient(#eee 0deg); display: flex; align-items: center; justify-content: center; position: relative; }
+        .circular-progress::before { content: ""; position: absolute; width: 100px; height: 100px; background: var(--card-bg); border-radius: 50%; }
+        .percent-text { position: relative; font-size: 22px; font-weight: bold; }
+
+        .comp-line { display: grid; grid-template-columns: 1fr 100px; background: white; padding: 10px; border-bottom: 1px solid #f0f0f0; align-items: center; border-radius: 4px; margin-bottom: 2px;}
+        .comp-date { font-family: monospace; font-size: 9px; background: #f8f9fa; padding: 4px; border-radius: 4px; text-align: center; border: 1px dashed #ccc; }
+        
+        .btn-add { background: var(--soma-dark); color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 9px; width: 100%; }
+        input, select, textarea { background: transparent; color: inherit; border: 1px solid rgba(0,0,0,0.1); padding: 5px; border-radius: 4px; font-size: 11px; }
+
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body onload="loadData()">
+
+    <div class="controls no-print">
+        <button class="reset-btn" onclick="resetAll()">RESET</button>
+        <div class="theme-btn" style="background:white" onclick="setTheme('day')"></div>
+        <div class="theme-btn" style="background:var(--soma-beige)" onclick="setTheme('soma')"></div>
+        <div class="theme-btn" style="background:var(--soma-night)" onclick="setTheme('night')"></div>
+        <button onclick="window.print()" style="font-size: 9px;">PDF</button>
+    </div>
+
+    <div class="notebook-header">
+        <div class="profile-container" onclick="document.getElementById('fileInput').click()">
+            <img id="profilePic" src="" style="display:none;">
+            <span id="picPlaceholder" style="font-size:8px;">PHOTO</span>
+        </div>
+        <input type="file" id="fileInput" style="display:none;" accept="image/*" onchange="loadPhoto(event)">
+        <div class="header-text">SUIVI SŌMA</div>
+    </div>
+
+    <div style="text-align:center; margin-bottom:20px;">
+        <input type="text" id="stageName" placeholder="NOM DE L'ÉTABLISSEMENT" style="width:70%; text-align:center; font-weight:bold; border:none; border-bottom:1px solid #ccc;" oninput="saveData()">
+    </div>
+
+    <div class="section-card dashboard-grid">
+        <div class="circular-progress" id="circle"><div class="percent-text" id="percentValue">0%</div></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div style="background:rgba(0,0,0,0.03); padding:5px; border-radius:5px;">
+                <label style="font-size:7px; font-weight:bold;">QUOTA (H)</label>
+                <input type="number" id="quota" value="140" style="width:100%;" oninput="calculate(); saveData();">
+            </div>
+            <div style="background:rgba(0,0,0,0.03); padding:5px; border-radius:5px;">
+                <label style="font-size:7px; font-weight:bold;">PRÉSENCE (+)</label>
+                <div style="display:flex;gap:2px;"><input type="number" id="in_present" style="width:30px;"><button onclick="addVal('present')" style="font-size:10px;">+</button></div>
+            </div>
+            <div style="background:rgba(0,0,0,0.03); padding:5px; border-radius:5px;">
+                <label style="font-size:7px; font-weight:bold;">ABSENCE (-)</label>
+                <div style="display:flex;gap:2px;"><input type="number" id="in_absent" style="width:30px;"><button onclick="addVal('absent')" style="font-size:10px;">-</button></div>
+            </div>
+            <div style="background:rgba(0,0,0,0.03); padding:5px; border-radius:5px;">
+                <label style="font-size:7px; font-weight:bold;">SUPP (+)</label>
+                <div style="display:flex;gap:2px;"><input type="number" id="in_extra" style="width:30px;"><button onclick="addVal('extra')" style="font-size:10px;">+</button></div>
+            </div>
+            <input type="hidden" id="present" value="0"><input type="hidden" id="absent" value="0"><input type="hidden" id="extra" value="0">
+            <div id="alertBox" style="grid-column: span 2; font-size:9px; text-align:center; font-weight:bold;"></div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <h3 style="font-size:10px; text-transform:uppercase;">Compétences</h3>
+        <div id="compList">
+            <div class="comp-line"><span>C1 - Actes essentiels</span><div class="comp-date" id="date-c1" onclick="setDate('c1')">À réaliser</div></div>
+            <div class="comp-line"><span>C3 - État clinique</span><div class="comp-date" id="date-c3" onclick="setDate('c3')">À réaliser</div></div>
+        </div>
+    </div>
+
+    <script>
+        function saveData() {
+            const data = {
+                stage: document.getElementById('stageName').value,
+                quota: document.getElementById('quota').value,
+                present: document.getElementById('present').value,
+                absent: document.getElementById('absent').value,
+                extra: document.getElementById('extra').value,
+                photo: document.getElementById('profilePic').src,
+                c1: document.getElementById('date-c1').innerText,
+                c3: document.getElementById('date-c3').innerText
+            };
+            localStorage.setItem('soma_widget_data', JSON.stringify(data));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('soma_widget_data');
+            if (saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('stageName').value = data.stage || "";
+                document.getElementById('quota').value = data.quota || 140;
+                document.getElementById('present').value = data.present || 0;
+                document.getElementById('absent').value = data.absent || 0;
+                document.getElementById('extra').value = data.extra || 0;
+                document.getElementById('date-c1').innerText = data.c1 || "À réaliser";
+                document.getElementById('date-c3').innerText = data.c3 || "À réaliser";
+                if(data.photo && data.photo.includes('data:image')) {
+                    const img = document.getElementById('profilePic');
+                    img.src = data.photo; img.style.display = 'block';
+                    document.getElementById('picPlaceholder').style.display = 'none';
+                }
+                calculate();
+            }
+        }
+
+        function resetAll() {
+            if(confirm("Effacer toutes les données ?")) {
+                localStorage.removeItem('soma_widget_data');
+                location.reload();
+            }
+        }
+
+        function addVal(type) {
+            const val = parseFloat(document.getElementById('in_'+type).value) || 0;
+            document.getElementById(type).value = parseFloat(document.getElementById(type).value) + val;
+            document.getElementById('in_'+type).value = "";
+            calculate(); saveData();
+        }
+
+        function setDate(id) {
+            const d = prompt("Date de validation (JJ/MM) :", new Date().toLocaleDateString('fr-FR').slice(0,5));
+            if(d) { 
+                document.getElementById('date-'+id).innerText = d;
+                document.getElementById('date-'+id).style.background = "#cfd8bd";
+                saveData();
+            }
+        }
+
+        function calculate() {
+            const q = parseFloat(document.getElementById('quota').value) || 1;
+            const p = parseFloat(document.getElementById('present').value) || 0;
+            const a = parseFloat(document.getElementById('absent').value) || 0;
+            const e = parseFloat(document.getElementById('extra').value) || 0;
+            const net = (p + e) - a;
+            const base = Math.max(q, (p+a+e));
+            document.getElementById('circle').style.background = `conic-gradient(var(--soma-matcha) 0deg ${(p/base)*360}deg, var(--soma-absent) ${(p/base)*360}deg ${((p+a)/base)*360}deg, var(--soma-extra) ${((p+a)/base)*360}deg ${((p+a+e)/base)*360}deg, #eee 0deg)`;
+            document.getElementById('percentValue').innerText = Math.round((net/q)*100) + "%";
+            document.getElementById('alertBox').innerText = net >= q ? "QUOTA ATTEINT ✓" : "MANQUE " + (q-net) + "H";
+        }
+
+        function loadPhoto(e) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const img = document.getElementById('profilePic');
+                img.src = reader.result; img.style.display = 'block';
+                document.getElementById('picPlaceholder').style.display = 'none';
+                saveData();
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+
+        function setTheme(m) {
+            const r = document.documentElement;
+            r.style.setProperty('--current-bg', m==='night'?'#1e272e':(m==='soma'?'#e8d8c3':'white'));
+            r.style.setProperty('--card-bg', m==='night'?'#2c3e50':'white');
+            r.style.setProperty('--current-text', m==='night'?'#f1f2f6':'#2d3436');
+        }
+    </script>
+</body>
+</html>
