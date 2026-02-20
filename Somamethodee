@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --soma-dark: #2d3436;
+            --soma-beige: #e8d8c3;
+            --soma-matcha: #cfd8bd; 
+            --soma-absent: #e7c9c9; 
+            --soma-extra: #b2bec3;  
+            --soma-white: #ffffff;
+            --soma-night: #1e272e;
+            --bloc1: #d1d8c5; --bloc2: #c5d1d8; --bloc3: #d8cfc5; --bloc4: #d1d1d1; --bloc5: #d8c5c5;
+            --current-bg: var(--soma-white);
+            --current-header: var(--soma-beige);
+            --current-text: var(--soma-dark);
+            --card-bg: #ffffff;
+        }
+
+        /* FIX NOTION : On force la hauteur pour éviter le scroll interne */
+        html { height: auto; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--current-bg); 
+            margin: 0; 
+            padding: 20px; 
+            color: var(--current-text); 
+            transition: all 0.3s ease;
+            min-height: 100vh; 
+            overflow-y: visible; 
+        }
+        
+        .controls { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; z-index: 1000; }
+        .theme-btn { width: 20px; height: 20px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; }
+        .reset-btn { background: #ff7675; color: white; border: none; padding: 0 10px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold; height: 20px; }
+
+        .notebook-header { width: 100%; height: 100px; background-color: var(--current-header); border-radius: 10px 25px 25px 10px; display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 15px;}
+        .profile-container { position: absolute; left: 20px; width: 75px; height: 75px; border-radius: 50%; background: #f0f0f0; border: 3px solid white; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.1);}
+        .profile-container img { width: 100%; height: 100%; object-fit: cover; }
+        .header-text { letter-spacing: 8px; text-transform: uppercase; font-weight: 300; font-size: 20px; }
+
+        .location-section { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-bottom: 30px; }
+        .location-input { border: none; border-bottom: 1px solid rgba(0,0,0,0.1); width: 60%; text-align: center; padding: 5px; background: transparent; color: inherit; font-weight: bold;}
+
+        .dashboard-grid { display: grid; grid-template-columns: 200px 1fr; gap: 40px; align-items: center; }
+        .circular-progress { width: 160px; height: 160px; border-radius: 50%; background: conic-gradient(#eee 0deg); display: flex; align-items: center; justify-content: center; position: relative; }
+        .circular-progress::before { content: ""; position: absolute; width: 125px; height: 125px; background: var(--card-bg); border-radius: 50%; }
+        .percent-text { position: relative; font-size: 24px; font-weight: bold; text-align: center; }
+
+        .section-card { background: var(--card-bg); border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; opacity: 0.7; border-left: 3px solid var(--soma-dark); padding-left: 10px;}
+
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { text-align: left; padding: 10px; border-bottom: 2px solid var(--soma-dark); text-transform: uppercase; }
+        td { padding: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+
+        .bloc-container { margin-bottom: 15px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); }
+        .bloc-header { padding: 10px 15px; font-weight: bold; font-size: 10px; text-transform: uppercase; }
+        .comp-line { display: grid; grid-template-columns: 1fr 120px; background: white; padding: 12px 15px; border-bottom: 1px solid #f0f0f0; align-items: center; }
+        .comp-text { font-size: 11px; line-height: 1.4; color: #444; }
+        .comp-date { font-family: monospace; font-size: 10px; background: #f8f9fa; padding: 5px; border-radius: 4px; text-align: center; color: #999; border: 1px dashed #ccc; transition: all 0.3s; }
+        
+        .b1 { background-color: var(--bloc1); } .b2 { background-color: var(--bloc2); } .b3 { background-color: var(--bloc3); } .b4 { background-color: var(--bloc4); } .b5 { background-color: var(--bloc5); }
+        .validated-row { background: #f1f2f6 !important; font-style: italic; color: #7f8c8d; }
+
+        .star-rating { display: flex; flex-direction: row-reverse; justify-content: flex-start; gap: 5px; margin: 15px 0; }
+        .star-rating input { display: none; }
+        .star-rating label { cursor: pointer; font-size: 28px; color: #ddd; transition: color 0.2s; }
+        .star-rating input:checked ~ label, .star-rating label:hover, .star-rating label:hover ~ label { color: #f1c40f; }
+
+        .btn-add { background: var(--soma-dark); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 10px; text-transform: uppercase; width: 100%; }
+        input, select, textarea { background: transparent; color: inherit; border: 1px solid rgba(0,0,0,0.1); padding: 5px; border-radius: 4px; }
+
+        .soma-copyright { margin-top: 60px; padding: 40px; border-top: 1px solid rgba(0,0,0,0.05); text-align: center; }
+        .soma-copyright p { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.6; margin: 5px 0; }
+
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body onload="loadData()">
+
+    <div class="controls no-print">
+        <button class="reset-btn" onclick="resetAll()">RESET</button>
+        <div class="theme-btn" style="background:white" onclick="setTheme('day')"></div>
+        <div class="theme-btn" style="background:var(--soma-beige)" onclick="setTheme('soma')"></div>
+        <div class="theme-btn" style="background:var(--soma-night)" onclick="setTheme('night')"></div>
+        <button onclick="window.print()">PDF</button>
+    </div>
+
+    <div class="notebook-header">
+        <div class="profile-container" onclick="document.getElementById('fileInput').click()">
+            <img id="profilePic" src="" style="display:none;">
+            <span id="picPlaceholder">PHOTO</span>
+        </div>
+        <input type="file" id="fileInput" style="display:none;" accept="image/*" onchange="loadPhoto(event)">
+        <div class="header-text">SUIVI SŌMA</div>
+    </div>
+
+    <div class="location-section">
+        <input type="text" id="stageName" class="location-input" placeholder="NOM DE L'ÉTABLISSEMENT" oninput="saveData()">
+        <input type="text" id="stageAddress" class="location-input" style="font-size:11px; font-weight:normal;" placeholder="ADRESSE COMPLÈTE" oninput="saveData()">
+    </div>
+
+    <div class="section-card dashboard-grid">
+        <div class="circular-progress" id="circle"><div class="percent-text" id="percentValue">0%</div></div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+            <div style="background: rgba(0,0,0,0.03); padding: 8px; border-radius: 6px;">
+                <label style="font-size:8px; font-weight:bold;">QUOTA (H)</label>
+                <div style="display:flex;gap:3px;"><input type="number" id="quota" value="140" style="width:50px;"><button onclick="calculate(); saveData();" style="font-size:9px;">OK</button></div>
+            </div>
+            <div style="background: rgba(0,0,0,0.03); padding: 8px; border-radius: 6px;">
+                <label style="font-size:8px; font-weight:bold;">PRÉSENCE (+)</label>
+                <div style="display:flex;gap:3px;"><input type="number" id="in_present" style="width:50px;"><button onclick="addVal('present')" style="font-size:9px;">+</button></div>
+            </div>
+            <div style="background: rgba(0,0,0,0.03); padding: 8px; border-radius: 6px;">
+                <label style="font-size:8px; font-weight:bold;">ABSENCE (-)</label>
+                <div style="display:flex;gap:3px;"><input type="number" id="in_absent" style="width:50px;"><button onclick="addVal('absent')" style="font-size:9px;">-</button></div>
+            </div>
+            <div style="background: rgba(0,0,0,0.03); padding: 8px; border-radius: 6px;">
+                <label style="font-size:8px; font-weight:bold;">SUPP (+)</label>
+                <div style="display:flex;gap:3px;"><input type="number" id="in_extra" style="width:50px;"><button onclick="addVal('extra')" style="font-size:9px;">+</button></div>
+            </div>
+            <input type="hidden" id="present" value="0"><input type="hidden" id="absent" value="0"><input type="hidden" id="extra" value="0">
+            <div id="alertBox" style="grid-column: span 2; font-size:10px; text-align:center; padding-top:5px; font-weight:bold;">Saisissez vos premières heures</div>
+        </div>
+    </div>
+
+    <div class="section-card no-print">
+        <h2>Saisie de Bilan de Progression</h2>
+        <div style="display: grid; grid-template-columns: 150px 1fr 100px; gap: 10px;">
+            <select id="typeBilan">
+                <option value="Bilan Quotidien">Bilan Quotidien</option>
+                <option value="Bilan Mi-Période">Bilan Mi-Période</option>
+                <option value="Bilan Fin de Période">Bilan Fin de Période</option>
+            </select>
+            <textarea id="texteBilan" placeholder="Décrivez votre progression..." style="height: 40px;"></textarea>
+            <button class="btn-add" onclick="validerBilan()">VALIDER</button>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <h2>Bilans passés</h2>
+        <table id="bilanTable">
+            <thead><tr><th style="width: 100px;">Date</th><th style="width: 150px;">Type</th><th>Observations</th></tr></thead>
+            <tbody id="bilanBody"></tbody>
+        </table>
+    </div>
+
+    <div class="section-card no-print">
+        <h2>Saisie de Traçabilité & Acquisition</h2>
+        <table id="inputTable">
+            <thead><tr><th>Date</th><th>Soin / Acte</th><th>Lieu</th><th>Compétence</th><th>Action</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><input type="date" id="newDate"></td>
+                    <td><input type="text" id="newSoin" placeholder="Désignation" style="width:110px;"></td>
+                    <td><select id="newLieu" onchange="checkOther(this)"><option value="Crèche">Crèche</option><option value="Hôpital">Hôpital</option><option value="Handicap">Handicap</option><option value="autre">Autre...</option></select><input type="text" id="newLieuAutre" placeholder="Précisez..." style="display:none; width:80px; margin-top:5px;"></td>
+                    <td><select id="newComp" style="width:130px;"><option value="">-- Choisir --</option><option value="c1">C1 - Actes essentiels</option><option value="c1bis">C1bis - Activités éveil</option><option value="c2">C2 - Situations risque</option><option value="c3">C3 - État clinique</option><option value="c4">C4 - Soins adaptés</option><option value="c5">C5 - Mobilisation</option><option value="c6">C6 - Communication</option><option value="c7">C7 - Informer pairs</option><option value="c8">C8 - Entretien locaux</option><option value="c9">C9 - Anomalies</option><option value="c10">C10 - Transmissions</option><option value="c11">C11 - Organisation</option></select></td>
+                    <td><button class="btn-add" onclick="processValidation()" style="padding:5px;">✓ VALIDER</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-card">
+        <h2>Historique des soins validés</h2>
+        <table id="historyTable">
+            <thead><tr><th>Date</th><th>Soin / Acte</th><th>Lieu</th><th>Compétence</th><th>Statut</th></tr></thead>
+            <tbody id="historyBody"></tbody>
+        </table>
+    </div>
+
+    <div class="section-card">
+        <h2>Suivi de l'acquisition des compétences (Auto)</h2>
+        <div class="bloc-container"><div class="bloc-header b1">Bloc 1 - Accompagnement et soins de l’enfant</div>
+            <div class="comp-line"><div class="comp-text"><b>C1 -</b> Accompagner l’enfant dans les actes essentiels...</div><div class="comp-date" id="date-c1">À réaliser</div></div>
+            <div class="comp-line"><div class="comp-text"><b>C1bis -</b> Elaborer et mettre en œuvre des activités d'éveil...</div><div class="comp-date" id="date-c1bis">À réaliser</div></div>
+            <div class="comp-line"><div class="comp-text"><b>C2 –</b> Identifier les situations à risque...</div><div class="comp-date" id="date-c2">À réaliser</div></div>
+        </div>
+        <div class="bloc-container"><div class="bloc-header b2">Bloc 2 - Evaluation état clinique et soins</div>
+            <div class="comp-line"><div class="comp-text"><b>C3 -</b> Evaluer l'état clinique d'une personne...</div><div class="comp-date" id="date-c3">À réaliser</div></div>
+            <div class="comp-line"><div class="comp-text"><b>C4 -</b> Mettre en œuvre des soins adaptés...</div><div class="comp-date" id="date-c4">À réaliser</div></div>
+            <div class="comp-line"><div class="comp-text"><b>C5 –</b> Accompagner la personne dans son installation...</div><div class="comp-date" id="date-c5">À réaliser</div></div>
+        </div>
+        <div class="bloc-container"><div class="bloc-header b3">Bloc 3 - Information et accompagnement</div>
+            <div class="comp-line"><div class="comp-text"><b>C6 -</b> Etablir une communication adaptée...</div><div class="comp-date" id="date-c6">À réaliser</div></div>
+            <div class="comp-line"><div class="comp-text"><b>C7 –</b> Informer et former les pairs...</div><div class="comp-date" id="date-c7">À réaliser</div></div>
+        </div>
+        <div class="bloc-container"><div class="bloc-header b4">Bloc 4 - Entretien environnement et matériel</div>
+            <div class="comp-line"><div class="comp-text"><b>C8 -</b> Utiliser des techniques d'entretien...</div><div class="comp-date" id="date-c8">À réaliser</div></div>
+            <div class="comp-line"><div class="comp-text"><b>C9 -</b> Repérer et traiter les anomalies...</div><div class="comp-date" id="date-c9">À réaliser</div></div>
+        </div>
+        <div class="bloc-container"><div class="bloc-header b5">Bloc 5 - Travail en équipe et transmissions</div>
+            <div class="comp-line"><div class="comp-text"><b>C10 -</b> Rechercher, traiter et transmettre les données...</div><div class="comp-date" id="date-c10">À réaliser</div></div>
+            <div class="comp-line"><div class="comp-text"><b>C11 -</b> Organiser son activité, coopérer...</div><div class="comp-date" id="date-c11">À réaliser</div></div>
+        </div>
+    </div>
+
+    <div class="section-card no-print">
+        <h2>Recommandations de l’établissement</h2>
+        <div class="star-rating">
+            <input type="radio" id="s5" name="stars" value="5" onchange="saveData()"><label for="s5">★</label>
+            <input type="radio" id="s4" name="stars" value="4" onchange="saveData()"><label for="s4">★</label>
+            <input type="radio" id="s3" name="stars" value="3" onchange="saveData()"><label for="s3">★</label>
+            <input type="radio" id="s2" name="stars" value="2" onchange="saveData()"><label for="s2">★</label>
+            <input type="radio" id="s1" name="stars" value="1" onchange="saveData()"><label for="s1">★</label>
+        </div>
+        <textarea id="recoComment" style="width:100%; height:60px;" placeholder="Votre avis sur ce lieu de stage..." oninput="saveData()"></textarea>
+        <button class="btn-add" style="background:#27ae60; margin-top:10px;" onclick="sendFeedback()">Envoyer mon avis à SŌMA</button>
+    </div>
+
+    <div class="soma-copyright"><p>© 2026 MÉTHODE SŌMA - TOUS DROITS RÉSERVÉS</p><p style="font-weight: bold;">PROPRIÉTÉ EXCLUSIVE DU CONCEPT SŌMA</p></div>
+
+    <script>
+        // LOGIQUE D'ENREGISTREMENT RENFORCÉE
+        function saveData() {
+            const data = {
+                stageName: document.getElementById('stageName').value,
+                stageAddress: document.getElementById('stageAddress').value,
+                quota: document.getElementById('quota').value,
+                present: document.getElementById('present').value,
+                absent: document.getElementById('absent').value,
+                extra: document.getElementById('extra').value,
+                recoComment: document.getElementById('recoComment').value,
+                stars: document.querySelector('input[name="stars"]:checked')?.value || null,
+                bilanHtml: document.getElementById('bilanBody').innerHTML,
+                historyHtml: document.getElementById('historyBody').innerHTML,
+                profileImg: document.getElementById('profilePic').src,
+                compDates: {}
+            };
+            document.querySelectorAll('.comp-date').forEach(el => {
+                data.compDates[el.id] = { text: el.innerText, bg: el.style.background, color: el.style.color };
+            });
+            // On sauvegarde sous deux clés pour maximiser les chances de survie dans Notion
+            localStorage.setItem('soma_data_v2', JSON.stringify(data));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('soma_data_v2') || localStorage.getItem('soma_data');
+            if (!saved) return;
+            const data = JSON.parse(saved);
+            document.getElementById('stageName').value = data.stageName || "";
+            document.getElementById('stageAddress').value = data.stageAddress || "";
+            document.getElementById('quota').value = data.quota || 140;
+            document.getElementById('present').value = data.present || 0;
+            document.getElementById('absent').value = data.absent || 0;
+            document.getElementById('extra').value = data.extra || 0;
+            document.getElementById('recoComment').value = data.recoComment || "";
+            document.getElementById('bilanBody').innerHTML = data.bilanHtml || "";
+            document.getElementById('historyBody').innerHTML = data.historyHtml || "";
+            if(data.stars) document.getElementById('s'+data.stars).checked = true;
+            if(data.profileImg && data.profileImg.includes('base64')) {
+                const img = document.getElementById('profilePic');
+                img.src = data.profileImg; img.style.display = 'block';
+                document.getElementById('picPlaceholder').style.display='none';
+            }
+            for (let id in data.compDates) {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.innerText = data.compDates[id].text;
+                    el.style.background = data.compDates[id].bg;
+                    el.style.color = data.compDates[id].color;
+                }
+            }
+            calculate();
+        }
+
+        function resetAll() {
+            if(confirm("Voulez-vous réinitialiser toutes les données ?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function setTheme(m) {
+            const r = document.documentElement;
+            r.style.setProperty('--current-bg', m==='night'?'#1e272e':(m==='soma'?'#e8d8c3':'white'));
+            r.style.setProperty('--current-text', m==='night'?'#f1f2f6':'#2d3436');
+            r.style.setProperty('--card-bg', m==='night'?'#2c3e50':'white');
+        }
+
+        function checkOther(select) { document.getElementById('newLieuAutre').style.display = (select.value === 'autre') ? 'block' : 'none'; }
+
+        function validerBilan() {
+            const texte = document.getElementById('texteBilan').value;
+            if(!texte) return alert("Saisissez un texte.");
+            const row = document.getElementById('bilanBody').insertRow(0);
+            row.className = "validated-row";
+            row.innerHTML = `<td>${new Date().toLocaleDateString('fr-FR')}</td><td><strong>${document.getElementById('typeBilan').value}</strong></td><td>${texte}</td>`;
+            document.getElementById('texteBilan').value = "";
+            saveData();
+        }
+
+        function processValidation() {
+            const dateVal = document.getElementById('newDate').value;
+            const soinVal = document.getElementById('newSoin').value;
+            const compId = document.getElementById('newComp').value;
+            if(!dateVal || !soinVal || !compId) return alert("Champs manquants.");
+            const formattedDate = new Date(dateVal).toLocaleDateString('fr-FR');
+            const row = document.getElementById('historyBody').insertRow(0);
+            row.className = "validated-row";
+            row.innerHTML = `<td>${formattedDate}</td><td>${soinVal}</td><td>${document.getElementById('newLieu').value}</td><td>${compId.toUpperCase()}</td><td style="color:green">✓</td>`;
+            const target = document.getElementById('date-' + compId);
+            if(target) {
+                target.innerText = "Le " + formattedDate;
+                target.style.background = "var(--soma-matcha)";
+                target.style.color = "var(--soma-dark)";
+            }
+            document.getElementById('newSoin').value = "";
+            saveData();
+        }
+
+        function addVal(type) {
+            const val = parseFloat(document.getElementById('in_'+type).value) || 0;
+            document.getElementById(type).value = parseFloat(document.getElementById(type).value) + val;
+            document.getElementById('in_'+type).value = "";
+            calculate();
+            saveData();
+        }
+
+        function calculate() {
+            const q = parseFloat(document.getElementById('quota').value) || 1;
+            const p = parseFloat(document.getElementById('present').value) || 0;
+            const a = parseFloat(document.getElementById('absent').value) || 0;
+            const e = parseFloat(document.getElementById('extra').value) || 0;
+            const net = (p + e) - a;
+            const totalSaisie = p + a + e;
+            const base = Math.max(q, totalSaisie); 
+            const pDeg = (p / base) * 360;
+            const aDeg = (a / base) * 360;
+            const eDeg = (e / base) * 360;
+            document.getElementById('circle').style.background = `conic-gradient(var(--soma-matcha) 0deg ${pDeg}deg, var(--soma-absent) ${pDeg}deg ${pDeg + aDeg}deg, var(--soma-extra) ${pDeg + aDeg}deg ${pDeg + aDeg + eDeg}deg, #eee 0deg)`;
+            document.getElementById('percentValue').innerHTML = Math.round((net / q) * 100) + "%";
+            const ab = document.getElementById('alertBox');
+            if (net >= q) {
+                ab.style.color = "green";
+                ab.innerHTML = "QUOTA D'HEURE FAIT ✓";
+            } else {
+                ab.style.color = "#c0392b"; 
+                ab.innerHTML = `STAGE NON VALIDÉ : IL MANQUE ${q - net}H`;
+            }
+        }
+
+        function sendFeedback() {
+            const name = document.getElementById('stageName').value;
+            const stars = document.querySelector('input[name="stars"]:checked')?.value || "0";
+            const comm = document.getElementById('recoComment').value;
+            window.location.href = `mailto:soma.methode@gmail.com?subject=Avis Stage: ${name}&body=Etablissement: ${name}%0D%0ANote: ${stars}/5%0D%0AAvis: ${comm}`;
+        }
+
+        function loadPhoto(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = document.getElementById('profilePic');
+                img.src = event.target.result;
+                img.style.display = 'block'; document.getElementById('picPlaceholder').style.display='none';
+                saveData();
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
