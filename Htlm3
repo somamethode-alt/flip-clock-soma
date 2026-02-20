@@ -3,42 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sōma - Secondes Flip Livre</title>
+<title>Sōma - Horloge Livre Complète</title>
 
 <style>
 :root {
     --widget-bg: #e7def6;
     --widget-text: #4b4453;
-    --page-speed: 0.6s;
+    --page-speed: 0.5s;
 }
 
 body {
     margin: 0;
     height: 100vh;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: #ffffff; /* Fond blanc pur */
+    background: #ffffff;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     overflow: hidden;
 }
 
-/* Container adapté pour la colonne latérale Notion */
-.widget-container {
+.container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
-    width: 100%;
-    max-width: 180px;
+    gap: 12px;
+    padding: 10px;
 }
 
-/* L'unité de flip style "Livre" */
+.clock-row {
+    display: flex;
+    gap: 8px; /* Espacement serré pour le cadrage Notion */
+}
+
+.unit-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Bloc Style Livre */
 .book-flip {
     position: relative;
-    width: 120px;
-    height: 140px;
+    width: 60px;  /* Largeur optimisée */
+    height: 70px; /* Hauteur optimisée */
     perspective: 1000px;
 }
 
@@ -48,21 +57,21 @@ body {
     height: 100%;
     background: var(--widget-bg);
     color: var(--widget-text);
-    border-radius: 12px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 65px;
+    font-size: 32px;
     font-weight: 700;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
-/* Feuille qui tourne */
 .leaf {
     transform-origin: left;
     transition: transform var(--page-speed) ease-in-out;
     backface-visibility: hidden;
     z-index: 2;
+    border-left: 1px solid rgba(0,0,0,0.05);
 }
 
 .leaf.flipping {
@@ -70,47 +79,60 @@ body {
 }
 
 .label {
-    font-size: 10px;
-    letter-spacing: 2px;
+    font-size: 8px;
+    letter-spacing: 1px;
     color: #9b90a8;
     text-transform: uppercase;
     font-weight: 600;
 }
 
-/* Palette de couleurs cliquable */
 .palette {
     display: flex;
-    gap: 6px;
-    margin-top: 10px;
+    gap: 8px;
+    margin-top: 5px;
 }
 
 .color-dot {
-    width: 18px;
-    height: 18px;
+    width: 15px;
+    height: 15px;
     border-radius: 50%;
     cursor: pointer;
-    border: 2px solid transparent;
-    transition: 0.2s;
+    border: 1px solid rgba(0,0,0,0.1);
 }
 
-.color-dot:hover { transform: scale(1.2); }
-
-/* Crédit discret */
 .credit {
     font-size: 9px;
     color: #ccc;
-    margin-top: 5px;
 }
 </style>
 </head>
 <body>
 
-<div class="widget-container">
-    <div class="label">Secondes</div>
-    
-    <div class="book-flip" id="seconds-widget">
-        <div class="base" id="next-val">00</div>
-        <div class="leaf" id="current-leaf">00</div>
+<div class="container">
+    <div class="clock-row">
+        <div class="unit-group">
+            <div class="book-flip" id="h-widget">
+                <div class="base" id="h-next">00</div>
+                <div class="leaf" id="h-leaf">00</div>
+            </div>
+            <div class="label">H</div>
+        </div>
+        
+        <div class="unit-group">
+            <div class="book-flip" id="m-widget">
+                <div class="base" id="m-next">00</div>
+                <div class="leaf" id="m-leaf">00</div>
+            </div>
+            <div class="label">M</div>
+        </div>
+
+        <div class="unit-group">
+            <div class="book-flip" id="s-widget">
+                <div class="base" id="s-next">00</div>
+                <div class="leaf" id="s-leaf">00</div>
+            </div>
+            <div class="label">S</div>
+        </div>
     </div>
 
     <div class="palette">
@@ -120,32 +142,42 @@ body {
         <div class="color-dot" style="background:#d8e8fb;" onclick="changeColor('#d8e8fb', '#4a5b6b')"></div>
     </div>
 
-    <div class="credit">Sōma</div>
+    <div class="credit">Design — Sōma</div>
 </div>
 
 <script>
-let lastSec = -1;
-const leaf = document.getElementById('current-leaf');
-const nextValEl = document.getElementById('next-val');
+// --- CONFIGURATION ---
+const USE_24H = true; // Changez par 'false' pour le format 12h
+// ---------------------
+
+let prevValues = { h: -1, m: -1, s: -1 };
+
+function animateUnit(unit, value) {
+    const leaf = document.getElementById(`${unit}-leaf`);
+    const nextValEl = document.getElementById(`${unit}-next`);
+    const displayVal = String(value).padStart(2, '0');
+
+    if (leaf.textContent !== displayVal) {
+        leaf.classList.add('flipping');
+        setTimeout(() => {
+            leaf.textContent = displayVal;
+            nextValEl.textContent = displayVal;
+            leaf.classList.remove('flipping');
+        }, 250);
+    }
+}
 
 function updateClock() {
     const now = new Date();
-    const s = now.getSeconds();
+    let h = now.getHours();
+    if (!USE_24H) h = h % 12 || 12;
     
-    if (s !== lastSec) {
-        const displayS = String(s).padStart(2, '0');
-        
-        // Animation de la page
-        leaf.classList.add('flipping');
-        
-        setTimeout(() => {
-            leaf.textContent = displayS;
-            nextValEl.textContent = displayS;
-            leaf.classList.remove('flipping');
-        }, 300); // Milieu de l'animation
-        
-        lastSec = s;
-    }
+    const m = now.getMinutes();
+    const s = now.getSeconds();
+
+    animateUnit('h', h);
+    animateUnit('m', m);
+    animateUnit('s', s);
 }
 
 function changeColor(bg, text) {
