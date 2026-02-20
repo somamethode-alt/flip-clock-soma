@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Sōma - Compagnon de Stage</title>
+   <style>
+       :root {
+           --soma-beige: #F5F5DC;
+           --soma-sable: #EADDCA;
+           --soma-accent: #D2B48C;
+           --soma-text: #4A4A4A;
+       }
+
+       body {
+           font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+           background-color: transparent; /* Pour s'intégrer à Notion */
+           color: var(--soma-text);
+           padding: 20px;
+           margin: 0;
+       }
+
+       .container {
+           background-color: white;
+           border-radius: 20px;
+           padding: 25px;
+           box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+           border: 1px solid var(--soma-sable);
+           max-width: 600px;
+           margin: auto;
+       }
+
+       h2 { color: var(--soma-accent); font-size: 1.2rem; margin-bottom: 20px; text-align: center; }
+
+       /* Style du Registre Bouclier */
+       .section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px dashed var(--soma-sable); }
+
+       input, select, button {
+           width: 100%;
+           padding: 10px;
+           margin-top: 8px;
+           border-radius: 10px;
+           border: 1px solid var(--soma-sable);
+           box-sizing: border-box;
+       }
+
+       button {
+           background-color: var(--soma-sable);
+           color: white;
+           font-weight: bold;
+           border: none;
+           cursor: pointer;
+           transition: 0.3s;
+       }
+
+       button:hover { background-color: var(--soma-accent); }
+
+       /* Affichage de la synthèse */
+       #resultat-synthese {
+           background-color: var(--soma-beige);
+           padding: 15px;
+           border-radius: 12px;
+           font-style: italic;
+           min-height: 50px;
+           margin-top: 15px;
+       }
+
+       /* Mode Impression */
+       @media print {
+           .no-print { display: none; }
+           body { background: white; }
+           .container { box-shadow: none; border: 1px solid black; }
+       }
+   </style>
+</head>
+<body>
+
+<div class="container">
+   <h2>✨ SŌMA - Suivi & Protection</h2>
+
+   <div class="section">
+       <label>🛡️ <strong>Registre de Soin (Bouclier)</strong></label>
+       <input type="text" id="soin" placeholder="Ex: Bain de nouveau-né">
+       <input type="text" id="soignant" placeholder="Nom de l'encadrant (ex: Julie, AP)">
+       <select id="semaine">
+           <option value="S1">Semaine 1</option>
+           <option value="S2">Semaine 2</option>
+           <option value="S3">Semaine 3</option>
+           <option value="S4">Semaine 4</option>
+           <option value="S5">Semaine 5</option>
+       </select>
+       <button class="no-print" onclick="ajouterAuRegistre()">Valider le soin</button>
+       <ul id="liste-soins" style="font-size: 0.9rem; margin-top: 10px;"></ul>
+   </div>
+
+   <div class="section">
+       <label>📝 <strong>Générateur de Synthèse Unique</strong></label>
+       <select id="verbe">
+           <option value="j'ai approfondi mes connaissances en">J'ai approfondi...</option>
+           <option value="j'ai su faire preuve de rigueur dans">J'ai été rigoureuse dans...</option>
+           <option value="j'ai pris confiance lors de">J'ai pris confiance pour...</option>
+       </select>
+       <button class="no-print" onclick="genererSynthese()">Générer ma synthèse</button>
+       <div id="resultat-synthese">Votre synthèse unique s'affichera ici...</div>
+   </div>
+
+   <button class="no-print" style="background: #4A4A4A;" onclick="window.print()">🖨️ Imprimer mon rapport</button>
+</div>
+
+<script>
+   function ajouterAuRegistre() {
+       const soin = document.getElementById('soin').value;
+       const soignant = document.getElementById('soignant').value;
+       const sem = document.getElementById('semaine').value;
+       if(soin && soignant) {
+           const li = document.createElement('li');
+           li.innerHTML = `<strong>${sem}</strong> : ${soin} (Vu par : ${soignant})`;
+           document.getElementById('liste-soins').appendChild(li);
+       }
+   }
+
+   function genererSynthese() {
+       const intros = ["Tout au long de cette période, ", "En situation de stage, ", "Dans le cadre de mon apprentissage, "];
+       const verbe = document.getElementById('verbe').value;
+       const fins = [" l'accompagnement global de l'enfant.", " la mise en place des protocoles d'hygiène.", " la communication avec l'équipe pluridisciplinaire."];
+
+       // Mélange aléatoire
+       const phrase = intros[Math.floor(Math.random() * intros.length)] +
+                      verbe +
+                      fins[Math.floor(Math.random() * fins.length)];
+
+       document.getElementById('resultat-synthese').innerText = phrase;
+   }
+</script>
+
+</body>
+</html>
