@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+:root {
+    /* Nouvelle Palette Muted & Aesthetic */
+    --color-1: #efebe9; /* Beige crème */
+    --color-2: #d7ccc8; /* Taupe doux */
+    --color-3: #f5f5f5; /* Gris perle */
+    --color-4: #e0e0e0; /* Plâtre */
+    --soma-dark: #5d4037; /* Brun signature */
+}
+
+body {
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    height: 100vh;
+    margin: 0;
+}
+
+/* STRUCTURE DU DOSSIER ÉPURÉ */
+.folder {
+    width: 150px;
+    height: 120px;
+    position: relative;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: center;
+}
+
+/* L'onglet du dossier */
+.folder::before {
+    content: "";
+    position: absolute;
+    top: -12px;
+    left: 15px;
+    width: 45px;
+    height: 20px;
+    background: inherit;
+    border-radius: 8px 8px 0 0;
+    z-index: -1;
+    border: 1px solid rgba(0,0,0,0.05);
+    border-bottom: none;
+}
+
+/* VARIANTES */
+.v1 { background: var(--color-1); }
+.v2 { background: var(--color-2); }
+.v3 { background: var(--color-3); }
+
+/* Motifs subtils sans texte */
+.grid {
+    background-image: radial-gradient(rgba(0,0,0,0.1) 1px, transparent 1px);
+    background-size: 12px 12px;
+}
+
+.check {
+    background-image: linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
+    background-size: 10px 10px;
+}
+
+/* Signature Sōma */
+.soma-tag {
+    position: absolute;
+    bottom: 12px;
+    font-family: 'Times New Roman', serif;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--soma-dark);
+    opacity: 0.5;
+    text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+    <div class="folder v1 grid">
+        <div class="soma-tag">Sōma</div>
+    </div>
+
+    <div class="folder v2">
+        <div class="soma-tag">Sōma</div>
+    </div>
+
+    <div class="folder v3 check">
+        <div class="soma-tag">Sōma</div>
+    </div>
+
+</body>
+</html>
