@@ -7,6 +7,7 @@
         --soma-bg: #f9f9f9;
         --soma-line: rgba(75, 68, 83, 0.08); /* Lignes ultra-fines */
         --soma-text: #4b4453;
+        --border-color: rgba(0, 0, 0, 0.04);
     }
 
     body {
@@ -16,25 +17,24 @@
         align-items: center;
         height: 100vh;
         margin: 0;
-        /* Améliore le rendu des polices et des tracés */
         -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Conteneur haute résolution */
-    .folder-hd {
-        width: 300px; /* Taille doublée pour la capture */
-        height: 240px;
+    /* Le Dossier avec l'onglet intégré pour une qualité parfaite */
+    .folder-wrapper {
         position: relative;
-        background: var(--soma-bg);
-        border-radius: 30px; /* Arrondi plus lisse */
-        
-        /* Double bordure pour un effet de profondeur HD */
-        border: 1.5px solid rgba(0,0,0,0.03);
-        box-shadow: 
-            0 10px 30px rgba(0,0,0,0.02),
-            inset 0 0 0 1px rgba(255,255,255,0.8);
+        width: 350px; /* Taille augmentée pour la capture HD */
+        filter: drop-shadow(0 15px 30px rgba(0,0,0,0.03));
+    }
 
+    .folder-main {
+        width: 100%;
+        height: 260px;
+        background: var(--soma-bg);
+        border-radius: 40px; /* Coins très arrondis comme sur ton image */
+        border: 2px solid var(--border-color);
+        position: relative;
+        z-index: 2;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -42,46 +42,53 @@
         overflow: hidden;
     }
 
-    /* Onglet HD avec raccord parfait */
-    .folder-hd::before {
-        content: "";
+    /* L'onglet (le bout au dessus) avec raccord fluide */
+    .folder-tab {
         position: absolute;
-        top: -18px;
-        left: 30px;
-        width: 90px;
-        height: 30px;
+        top: -22px;
+        left: 35px;
+        width: 100px;
+        height: 45px;
         background: var(--soma-bg);
-        border-radius: 15px 15px 0 0;
-        z-index: -1;
-        border: 1.5px solid rgba(0,0,0,0.03);
+        border: 2px solid var(--border-color);
         border-bottom: none;
+        border-radius: 20px 20px 0 0;
+        z-index: 1;
     }
 
-    /* Texture Grille HD (Vecteurs CSS) */
+    /* Texture Grille HD */
     .grid-hd {
+        position: absolute;
+        inset: 0;
         background-image: 
             linear-gradient(var(--soma-line) 1.5px, transparent 1.5px),
             linear-gradient(90deg, var(--soma-line) 1.5px, transparent 1.5px);
-        background-size: 25px 25px; /* Grille plus large et nette */
+        background-size: 20px 20px;
     }
 
     /* Typographie SŌMA Haute Précision */
     .brand-hd {
-        position: absolute;
-        bottom: 30px;
+        position: relative;
+        z-index: 3;
+        margin-top: 140px;
         font-family: 'Times New Roman', serif;
-        font-size: 22px; /* Plus grand pour la capture */
-        letter-spacing: 8px;
+        font-size: 24px;
+        letter-spacing: 10px;
         color: var(--soma-text);
         font-variant-caps: all-small-caps;
-        opacity: 0.6;
+        opacity: 0.7;
     }
 </style>
 </head>
 <body>
 
-    <div class="folder-hd grid-hd">
-        <div class="brand-hd">Sōma</div>
+    <div class="folder-wrapper">
+        <div class="folder-tab"></div>
+        
+        <div class="folder-main">
+            <div class="grid-hd"></div>
+            <div class="brand-hd">Sōma</div>
+        </div>
     </div>
 
 </body>
