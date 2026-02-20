@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+:root {
+    --mtp-sage: #e2f3e8;
+    --mtp-rose: #fce4ec;
+    --mtp-cream: #fff9f0;
+    --mtp-border: #4a5b6b;
+}
+
+body {
+    background: #ffffff;
+    display: flex;
+    gap: 30px;
+    padding: 50px;
+    font-family: 'Georgia', serif;
+}
+
+/* LA STRUCTURE MADETOPLAN */
+.mtp-icon {
+    width: 140px;
+    height: 140px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 40px 15px 40px 15px; /* Forme asymétrique signature */
+    border: 2px solid var(--mtp-border);
+    box-shadow: 6px 6px 0px var(--mtp-border);
+    transition: 0.3s;
+}
+
+/* Motif à carreaux Madetoplan */
+.pattern-check {
+    background-color: var(--mtp-sage);
+    background-image: radial-gradient(var(--mtp-border) 0.5px, transparent 0.5px);
+    background-size: 10px 10px;
+}
+
+/* Motif Lignes minimalistes */
+.pattern-lines {
+    background: var(--mtp-rose);
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(74, 91, 107, 0.1) 10px, rgba(74, 91, 107, 0.1) 11px);
+}
+
+/* Motif Plein avec grain */
+.pattern-solid {
+    background: var(--mtp-cream);
+}
+
+.icon-symbol {
+    font-size: 30px;
+    margin-bottom: 5px;
+}
+
+.icon-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: var(--mtp-border);
+}
+
+.exclusive-tag {
+    position: absolute;
+    bottom: -20px;
+    font-size: 8px;
+    color: #bbb;
+    font-family: sans-serif;
+}
+</style>
+</head>
+<body>
+
+    <div class="mtp-icon pattern-check">
+        <div class="icon-symbol">✦</div>
+        <div class="icon-label">Plan</div>
+        <div class="exclusive-tag">Madetoplan ©</div>
+    </div>
+
+    <div class="mtp-icon pattern-lines">
+        <div class="icon-symbol">✎</div>
+        <div class="icon-label">Notes</div>
+        <div class="exclusive-tag">Madetoplan ©</div>
+    </div>
+
+    <div class="mtp-icon pattern-solid">
+        <div class="icon-symbol">☁</div>
+        <div class="icon-label">Mood</div>
+        <div class="exclusive-tag">Madetoplan ©</div>
+    </div>
+
+</body>
+</html>
