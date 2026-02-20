@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sōma — Minimalist Book Clock</title>
+
+<style>
+:root {
+    --widget-bg: #e7def6;
+    --widget-text: #4b4453;
+    --page-speed: 0.6s;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff; /* Fond blanc pur */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    overflow: hidden;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.clock-row {
+    display: flex;
+    gap: 10px;
+}
+
+.unit-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Structure des blocs */
+.box {
+    position: relative;
+    width: 65px;
+    height: 80px;
+    background: var(--widget-bg);
+    color: var(--widget-text);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    font-weight: 700;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+}
+
+/* Animation Livre (uniquement pour les secondes) */
+.book-flip {
+    perspective: 1000px;
+}
+
+.leaf {
+    position: absolute;
+    inset: 0;
+    background: var(--widget-bg);
+    color: var(--widget-text);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: left;
+    transition: transform var(--page-speed) ease-in-out;
+    backface-visibility: hidden;
+    z-index: 2;
+    border-left: 1px solid rgba(0,0,0,0.05);
+}
+
+.leaf.flipping {
+    transform: rotateY(-180deg);
+}
+
+.label {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: #9b90a8;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* Palette Aesthetic */
+.palette {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.color-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.color-dot:hover { transform: scale(1.2); }
+
+.credit {
+    font-size: 9px;
+    color: #ddd;
+    margin-top: 10px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="clock-row">
+        <div class="unit-group">
+            <div class="box" id="h-val">00</div>
+            <div class="label">H</div>
+        </div>
+        
+        <div class="unit-group">
+            <div class="box" id="m-val">00</div>
+            <div class="label">M</div>
+        </div>
+
+        <div class="unit-group">
+            <div class="box book-flip">
+                <div id="s-next" style="position:absolute;">00</div>
+                <div class="leaf" id="s-leaf">00</div>
+            </div>
+            <div class="label">S</div>
+        </div>
+    </div>
+
+    <div class="palette">
+        <div class="color-dot" style="background:#e7def6;" onclick="changeColor('#e7def6', '#4b4453')"></div>
+        <div class="color-dot" style="background:#fbe4d8;" onclick="changeColor('#fbe4d8', '#6b544a')"></div>
+        <div class="color-dot" style="background:#e2f3e8;" onclick="changeColor('#e2f3e8', '#4a6b58')"></div>
+        <div class="color-dot" style="background:#d8e8fb;" onclick="changeColor('#d8e8fb', '#4a5b6b')"></div>
+    </div>
+
+    <div class="credit">Design — Sōma</div>
+</div>
+
+<script>
+// --- CONFIGURATION ---
+const USE_24H = true; // Mettre à 'false' pour le format 12h
+// ---------------------
+
+let lastS = -1;
+
+function updateClock() {
+    const now = new Date();
+    
+    // Calcul Heures
+    let h = now.getHours();
+    if (!USE_24H) h = h % 12 || 12;
+    document.getElementById('h-val').textContent = String(h).padStart(2, '0');
+
+    // Calcul Minutes
+    let m = now.getMinutes();
+    document.getElementById('m-val').textContent = String(m).padStart(2, '0');
+
+    // Calcul Secondes (avec animation livre)
+    let s = now.getSeconds();
+    if (s !== lastS) {
+        const leaf = document.getElementById('s-leaf');
+        const next = document.getElementById('s-next');
+        const displayS = String(s).padStart(2, '0');
+
+        leaf.classList.add('flipping');
+        
+        setTimeout(() => {
+            leaf.textContent = displayS;
+            next.textContent = displayS;
+            leaf.classList.remove('flipping');
+        }, 300);
+        
+        lastS = s;
+    }
+}
+
+function changeColor(bg, text) {
+    document.documentElement.style.setProperty('--widget-bg', bg);
+    document.documentElement.style.setProperty('--widget-text', text);
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+
+</body>
+</html>
