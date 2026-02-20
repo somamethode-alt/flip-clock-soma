@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sōma - Secondes Flip Livre</title>
+
+<style>
+:root {
+    --widget-bg: #e7def6;
+    --widget-text: #4b4453;
+    --page-speed: 0.6s;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff; /* Fond blanc pur */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    overflow: hidden;
+}
+
+/* Container adapté pour la colonne latérale Notion */
+.widget-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    max-width: 180px;
+}
+
+/* L'unité de flip style "Livre" */
+.book-flip {
+    position: relative;
+    width: 120px;
+    height: 140px;
+    perspective: 1000px;
+}
+
+.base, .leaf {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: var(--widget-bg);
+    color: var(--widget-text);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 65px;
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* Feuille qui tourne */
+.leaf {
+    transform-origin: left;
+    transition: transform var(--page-speed) ease-in-out;
+    backface-visibility: hidden;
+    z-index: 2;
+}
+
+.leaf.flipping {
+    transform: rotateY(-180deg);
+}
+
+.label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #9b90a8;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* Palette de couleurs cliquable */
+.palette {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.color-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: 0.2s;
+}
+
+.color-dot:hover { transform: scale(1.2); }
+
+/* Crédit discret */
+.credit {
+    font-size: 9px;
+    color: #ccc;
+    margin-top: 5px;
+}
+</style>
+</head>
+<body>
+
+<div class="widget-container">
+    <div class="label">Secondes</div>
+    
+    <div class="book-flip" id="seconds-widget">
+        <div class="base" id="next-val">00</div>
+        <div class="leaf" id="current-leaf">00</div>
+    </div>
+
+    <div class="palette">
+        <div class="color-dot" style="background:#e7def6;" onclick="changeColor('#e7def6', '#4b4453')"></div>
+        <div class="color-dot" style="background:#fbe4d8;" onclick="changeColor('#fbe4d8', '#6b544a')"></div>
+        <div class="color-dot" style="background:#e2f3e8;" onclick="changeColor('#e2f3e8', '#4a6b58')"></div>
+        <div class="color-dot" style="background:#d8e8fb;" onclick="changeColor('#d8e8fb', '#4a5b6b')"></div>
+    </div>
+
+    <div class="credit">Sōma</div>
+</div>
+
+<script>
+let lastSec = -1;
+const leaf = document.getElementById('current-leaf');
+const nextValEl = document.getElementById('next-val');
+
+function updateClock() {
+    const now = new Date();
+    const s = now.getSeconds();
+    
+    if (s !== lastSec) {
+        const displayS = String(s).padStart(2, '0');
+        
+        // Animation de la page
+        leaf.classList.add('flipping');
+        
+        setTimeout(() => {
+            leaf.textContent = displayS;
+            nextValEl.textContent = displayS;
+            leaf.classList.remove('flipping');
+        }, 300); // Milieu de l'animation
+        
+        lastSec = s;
+    }
+}
+
+function changeColor(bg, text) {
+    document.documentElement.style.setProperty('--widget-bg', bg);
+    document.documentElement.style.setProperty('--widget-text', text);
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+
+</body>
+</html>
