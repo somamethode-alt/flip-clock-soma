@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #ffffff;
+        }
+
+        .canvas-4k {
+            width: 900px; /* On travaille large pour la netteté */
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.03));
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            display: block;
+            shape-rendering: geometricPrecision;
+        }
+    </style>
+</head>
+<body>
+
+<div class="canvas-4k">
+    <svg viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <pattern id="somaGrid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(75, 68, 83, 0.06)" stroke-width="0.8"/>
+            </pattern>
+        </defs>
+
+        <path d="M70 40 
+                 C58.9 40 50 48.9 50 60 
+                 V80 
+                 H40 
+                 C17.9 80 0 97.9 0 120 
+                 V360 
+                 C0 382.1 17.9 400 40 400 
+                 H460 
+                 C482.1 400 500 382.1 500 360 
+                 V120 
+                 C500 97.9 482.1 80 460 80 
+                 H160 
+                 V60 
+                 C160 48.9 151.1 40 140 40 
+                 H70 Z" 
+              fill="#f9f9f9"/>
+
+        <path d="M70 40 C58.9 40 50 48.9 50 60 V80 H40 C17.9 80 0 97.9 0 120 V360 C0 382.1 17.9 400 40 400 H460 C482.1 400 500 382.1 500 360 V120 C500 97.9 482.1 80 460 80 H160 V60 C160 48.9 151.1 40 140 40 H70 Z" 
+              fill="url(#somaGrid)"/>
+
+        <path d="M70 40.5 C59.2 40.5 50.5 49.2 50.5 60 V80.5 H40.5 C18.7 80.5 1 98.2 1 120 V359.5 C1 381.3 18.7 399 40.5 399 H459.5 C481.3 399 499 381.3 499 359.5 V120 C499 98.2 481.3 80.5 459.5 80.5 H159.5 V60 C159.5 49.2 150.8 40.5 140 40.5 H70 Z" 
+              fill="none" 
+              stroke="rgba(0,0,0,0.04)" 
+              stroke-width="1.2"/>
+
+        <text x="250" y="325" 
+              text-anchor="middle" 
+              font-family="Times New Roman, serif" 
+              font-size="26" 
+              letter-spacing="14" 
+              fill="#4b4453" 
+              style="font-variant-caps: all-small-caps; opacity: 0.6;">SŌMA</text>
+    </svg>
+</div>
+
+</body>
+</html>
