@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+    :root {
+        --soma-bg: #f9f9f9;
+        --soma-line: rgba(75, 68, 83, 0.08); /* Lignes ultra-fines */
+        --soma-text: #4b4453;
+    }
+
+    body {
+        background: #ffffff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        /* Améliore le rendu des polices et des tracés */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Conteneur haute résolution */
+    .folder-hd {
+        width: 300px; /* Taille doublée pour la capture */
+        height: 240px;
+        position: relative;
+        background: var(--soma-bg);
+        border-radius: 30px; /* Arrondi plus lisse */
+        
+        /* Double bordure pour un effet de profondeur HD */
+        border: 1.5px solid rgba(0,0,0,0.03);
+        box-shadow: 
+            0 10px 30px rgba(0,0,0,0.02),
+            inset 0 0 0 1px rgba(255,255,255,0.8);
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    /* Onglet HD avec raccord parfait */
+    .folder-hd::before {
+        content: "";
+        position: absolute;
+        top: -18px;
+        left: 30px;
+        width: 90px;
+        height: 30px;
+        background: var(--soma-bg);
+        border-radius: 15px 15px 0 0;
+        z-index: -1;
+        border: 1.5px solid rgba(0,0,0,0.03);
+        border-bottom: none;
+    }
+
+    /* Texture Grille HD (Vecteurs CSS) */
+    .grid-hd {
+        background-image: 
+            linear-gradient(var(--soma-line) 1.5px, transparent 1.5px),
+            linear-gradient(90deg, var(--soma-line) 1.5px, transparent 1.5px);
+        background-size: 25px 25px; /* Grille plus large et nette */
+    }
+
+    /* Typographie SŌMA Haute Précision */
+    .brand-hd {
+        position: absolute;
+        bottom: 30px;
+        font-family: 'Times New Roman', serif;
+        font-size: 22px; /* Plus grand pour la capture */
+        letter-spacing: 8px;
+        color: var(--soma-text);
+        font-variant-caps: all-small-caps;
+        opacity: 0.6;
+    }
+</style>
+</head>
+<body>
+
+    <div class="folder-hd grid-hd">
+        <div class="brand-hd">Sōma</div>
+    </div>
+
+</body>
+</html>
