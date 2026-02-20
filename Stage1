@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --soma-dark: #4b4453;
+            --soma-blush: #e7c9c9;
+            --soma-matcha: #cfd8bd;
+            --soma-slate: #b2bec3;
+        }
+        body { font-family: 'Inter', sans-serif; background: #fff; padding: 20px; }
+        
+        .task-manager {
+            border: 1px solid #eee;
+            border-radius: 15px;
+            padding: 20px;
+            background: #fafafa;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        
+        .stats-row { display: flex; gap: 15px; margin-bottom: 20px; }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            flex: 1;
+            text-align: center;
+            border-bottom: 3px solid var(--soma-blush);
+        }
+
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        th { background: var(--soma-dark); color: white; padding: 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; color: #444; }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .b-high { background: var(--soma-blush); color: #8a4a4a; }
+        .b-med { background: var(--soma-matcha); color: #4a5a4a; }
+
+        .progress-bar { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--soma-dark); width: 65%; }
+    </style>
+</head>
+<body>
+
+<div class="task-manager">
+    <div class="header">
+        <h2 style="letter-spacing: 5px; color: var(--soma-dark);">SŌMA MANAGER</h2>
+        <div style="font-family: serif; italic; color: #999;">Suivi de Stage de Haute Précision</div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card"><strong>11</strong><br><small>Compétences</small></div>
+        <div class="stat-card"><strong>140h</strong><br><small>Objectif</small></div>
+        <div class="stat-card"><strong>65%</strong><br><small>Progression</small></div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Soin / Compétence</th>
+                <th>Priorité</th>
+                <th>Validation</th>
+                <th>Progression</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Accompagnement Vie Sociale</td>
+                <td><span class="badge b-high">Crucial</span></td>
+                <td>En cours</td>
+                <td><div class="progress-bar"><div class="progress-fill" style="width: 80%;"></div></div></td>
+            </tr>
+            <tr>
+                <td>Soins d'Hygiène (B2)</td>
+                <td><span class="badge b-med">Routine</span></td>
+                <td>Validé</td>
+                <td><div class="progress-bar"><div class="progress-fill" style="width: 100%;"></div></div></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
