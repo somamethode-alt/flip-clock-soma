@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flip Clock — Sōma Ultra Realistic</title>
+
+<style>
+:root {
+    /* MODIFIEZ LES COULEURS DU WIDGET ICI */
+    --widget-card-bg: #e7def6;    /* Couleur de fond des volets */
+    --widget-text: #4b4453;       /* Couleur des chiffres */
+    --widget-shadow: rgba(0,0,0,0.18); /* Intensité de l'ombre de l'animation */
+    
+    /* Fond de la page (fixé en blanc comme demandé) */
+    --bg-page: #ffffff;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-page);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.container {
+    text-align: center;
+}
+
+.clock {
+    display: flex;
+    gap: 18px;
+}
+
+/* ===== FLIP UNIT ===== */
+
+.flip {
+    position: relative;
+    width: 130px;
+    height: 150px;
+    perspective: 1600px;
+}
+
+.static-top,
+.static-bottom,
+.flip-page {
+    position: absolute;
+    width: 100%;
+    height: 50%;
+    background: var(--widget-card-bg);
+    color: var(--widget-text);
+    font-size: 70px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.static-top {
+    top: 0;
+    border-radius: 20px 20px 8px 8px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.static-bottom {
+    bottom: 0;
+    border-radius: 8px 8px 20px 20px;
+    transform: rotateX(180deg);
+}
+
+/* ===== FLIP PAGE ===== */
+
+.flip-page {
+    left: 0;
+    backface-visibility: hidden;
+}
+
+.page-front {
+    top: 0;
+    transform-origin: bottom;
+    border-radius: 20px 20px 8px 8px;
+}
+
+.page-back {
+    bottom: 0;
+    transform-origin: top;
+    border-radius: 8px 8px 20px 20px;
+    transform: rotateX(180deg);
+}
+
+/* ===== SHADOWS ===== */
+
+.page-front::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent, var(--widget-shadow));
+    opacity: 0;
+}
+
+.page-back::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, transparent, var(--widget-shadow));
+    opacity: 0;
+}
+
+/* ===== ANIMATIONS ===== */
+
+.flip-top {
+    animation: turnPageTop .55s cubic-bezier(.37,.01,.33,1) forwards;
+}
+
+.flip-bottom {
+    animation: turnPageBottom .55s cubic-bezier(.37,.01,.33,1) .55s forwards;
+}
+
+.flip-top::after { animation: shadowFade .55s forwards; }
+.flip-bottom::after { animation: shadowFade .55s .55s forwards; }
+
+@keyframes turnPageTop {
+    0% { transform: rotateX(0); }
+    100% { transform: rotateX(-180deg); }
+}
+
+@keyframes turnPageBottom {
+    0% { transform: rotateX(180deg); }
+    100% { transform: rotateX(0); }
+}
+
+@keyframes shadowFade {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* ===== LABELS & CREDIT ===== */
+
+.label {
+    margin-top: 8px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #9b90a8;
+}
+
+.unit { text-align: center; }
+
+.credit {
+    margin-top: 20px;
+    font-size: 11px;
+    color: #9b90a8;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="clock">
+        <div class="unit">
+            <div class="flip" id="h"></div>
+            <div class="label">HEURES</div>
+        </div>
+        <div class="unit">
+            <div class="flip" id="m"></div>
+            <div class="label">MINUTES</div>
+        </div>
+        <div class="unit">
+            <div class="flip" id="s"></div>
+            <div class="label">SECONDES</div>
+        </div>
+    </div>
+    <div class="credit">Design & widget — Sōma</div>
+</div>
+
+<script>
+const USE_24H = true;
+
+function init(el, val) {
+    el.innerHTML = `
+        <div class="static-top">${val}</div>
+        <div class="static-bottom">${val}</div>
+    `;
+}
+
+function turnPage(el, newVal) {
+    const top = el.querySelector('.static-top');
+    const bottom = el.querySelector('.static-bottom');
+
+    const pageFront = document.createElement("div");
+    pageFront.className = "flip-page page-front";
+    pageFront.textContent = top.textContent;
+
+    const pageBack = document.createElement("div");
+    pageBack.className = "flip-page page-back";
+    pageBack.textContent = newVal;
+
+    el.appendChild(pageFront);
+    el.appendChild(pageBack);
+
+    pageFront.classList.add("flip-top");
+    pageBack.classList.add("flip-bottom");
+
+    setTimeout(() => {
+        top.textContent = newVal;
+        bottom.textContent = newVal;
+        pageFront.remove();
+        pageBack.remove();
+    }, 1100);
+}
+
+function update() {
+    const now = new Date();
+    let h = now.getHours();
+    if (!USE_24H) h = h % 12 || 12;
+
+    const values = [
+        String(h).padStart(2, '0'),
+        String(now.getMinutes()).padStart(2, '0'),
+        String(now.getSeconds()).padStart(2, '0')
+    ];
+
+    ["h", "m", "s"].forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (!el.dataset.ready) {
+            init(el, values[i]);
+            el.dataset.ready = 1;
+        } else {
+            const current = el.querySelector('.static-top').textContent;
+            if (current !== values[i]) turnPage(el, values[i]);
+        }
+    });
+}
+
+setInterval(update, 1000);
+update();
+</script>
+
+</body>
+</html>
