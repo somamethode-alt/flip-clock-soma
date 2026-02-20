@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SŌMA - Bouclier Étudiant DEAP</title>
+    <style>
+        :root {
+            --soma-dark: #2d3436;
+            --soma-beige: #f4f1ea;
+            --soma-matcha: #cfd8bd;
+            --soma-blush: #e7c9c9;
+            --soma-slate: #b2bec3;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: #fff;
+            color: var(--soma-dark);
+            margin: 0;
+            padding: 40px;
+            line-height: 1.6;
+        }
+
+        /* --- HEADER NOTEBOOK STYLE --- */
+        .notebook-header {
+            width: 100%;
+            height: 180px;
+            background-color: #e8d8c3;
+            border-radius: 10px 25px 25px 10px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            margin-bottom: 50px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .notebook-header::after {
+            content: "";
+            position: absolute;
+            right: 40px;
+            top: 0; height: 100%; width: 12px;
+            background: #222;
+            box-shadow: inset 2px 0 5px rgba(0,0,0,0.3);
+        }
+
+        .header-title {
+            text-align: center;
+            letter-spacing: 12px;
+            text-transform: uppercase;
+        }
+
+        /* --- SECTION STYLES --- */
+        .section-card {
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            border-left: 4px solid var(--soma-dark);
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* --- INPUTS & TABLES --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: white;
+        }
+
+        th {
+            background: var(--soma-dark);
+            color: white;
+            font-size: 11px;
+            padding: 12px;
+            text-align: left;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            border: 1px solid #ddd;
+            padding: 8px;
+            border-radius: 5px;
+            font-family: inherit;
+        }
+
+        /* --- COMPETENCES DEAP --- */
+        .comp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .comp-item {
+            background: white;
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .comp-num { font-weight: bold; color: var(--soma-slate); margin-bottom: 5px; display: block; }
+
+        @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+            .section-card { border: 1px solid #000; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="notebook-header">
+        <div class="header-title">
+            <h1 style="margin:0; font-size: 28px;">DEAP</h1>
+            <p style="margin:0; font-family: serif; letter-spacing: 4px; color: rgba(0,0,0,0.5);">SŌMA</p>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <h2>Compteur d'Heures & Quota</h2>
+        <div style="display: flex; gap: 20px; align-items: flex-end;">
+            <div style="flex: 1;">
+                <label>Quota de stage (heures) :</label>
+                <input type="number" id="quota" value="140">
+            </div>
+            <div style="flex: 1;">
+                <label>Heures déjà effectuées :</label>
+                <input type="number" id="done" placeholder="Ex: 35">
+            </div>
+            <div style="flex: 1; background: var(--soma-matcha); padding: 10px; border-radius: 8px; text-align: center;">
+                <small>Progression</small><br>
+                <strong id="progression">0%</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <h2>Registre de Traçabilité (Preuves)</h2>
+        <p style="font-size: 11px; color: #666; margin-bottom: 15px;">Documenter chaque soin pour protéger votre validation.</p>
+        <table id="traceTable">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Date/Heure</th>
+                    <th style="width: 25%;">Soin / Activité</th>
+                    <th style="width: 15%;">Chambre</th>
+                    <th style="width: 15%;">Soignant</th>
+                    <th style="width: 30%;">Observations</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="datetime-local"></td>
+                    <td><input type="text" placeholder="ex: Aide à la toilette"></td>
+                    <td><input type="text" placeholder="204"></td>
+                    <td><input type="text" placeholder="Mme. Durand (AP)"></td>
+                    <td><textarea placeholder="RAS / Collaboration..."></textarea></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="no-print" onclick="addRow()" style="margin-top:10px; padding: 10px; cursor: pointer;">+ Ajouter un soin</button>
+    </div>
+
+    <div class="section-card">
+        <h2>Suivi des Compétences DEAP</h2>
+        <div class="comp-grid">
+            <div class="comp-item"><span class="comp-num">C1</span> Accompagner l'enfant dans les actes de la vie quotidienne <select><option>Non pratiqué</option><option>En cours</option><option>Acquis</option></select></div>
+            <div class="comp-item"><span class="comp-num">C1bis</span> Activités d'éveil, de loisirs et d'éducation <select><option>Non pratiqué</option><option>En cours</option><option>Acquis</option></select></div>
+            <div class="comp-item"><span class="comp-num">C2</span> Repérer les situations à risque et actions de prévention <select><option>Non pratiqué</option><option>En cours</option><option>Acquis</option></select></div>
+            <div class="comp-item"><span class="comp-num">C3</span> Évaluer l'état clinique et adapter sa prise en soin <select><option>Non pratiqué</option><option>En cours</option><option>Acquis</option></select></div>
+            <div class="comp-item"><span class="comp-num">C4</span> Mettre en œuvre des soins adaptés, protocoles d'hygiène <select><option>Non pratiqué</option><option>En cours</option><option>Acquis</option></select></div>
+            <div class="comp-item"><span class="comp-num">C5</span> Installation et mobilisation (ergonomie) <select><option>Non pratiqué</option><option>En cours</option><option>Acquis</option></select></div>
+            <div class="comp-item"><span class="comp-num">C6</span> Communication adaptée aux personnes et entourage <select><option>Non pratiqué</option><option>En cours</option><option>Acquis</option></select></div>
+            <div class="comp-item"><span class="comp-num">C7</span> Informer et former les pairs et stagiaires <select><option>Non pratiqué</option><option>En cours</option><option>Acquis</option></select></div>
+            <div class="comp-item"><span class="comp-num">C8</span> Entretien des locaux et dispositifs médicaux <select><option>Non pratiqué</option><option>En cours</option><option>Acquis</option></select></div>
+            <div class="comp-item"><span class="comp-num">C9</span> Traitement des données et coordination des soins <select><option>Non pratiqué</option><option>En cours</option><option>Acquis</option></select></div>
+            <div class="comp-item"><span class="comp-num">C10</span> Travail en équipe pluriprofessionnelle <select><option>Non pratiqué</option><option>En cours</option><option>Acquis</option></select></div>
+            <div class="comp-item"><span class="comp-num">C11</span> Formation des pairs <select><option>Non pratiqué</option><option>En cours</option><option>Acquis</option></select></div>
+        </div>
+    </div>
+
+    <script>
+        function addRow() {
+            const table = document.getElementById("traceTable").getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            newRow.innerHTML = `<td><input type="datetime-local"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><textarea></textarea></td>`;
+        }
+
+        // Calcul automatique simple
+        document.addEventListener('input', function() {
+            const quota = document.getElementById('quota').value;
+            const done = document.getElementById('done').value;
+            if(quota && done) {
+                const percent = Math.round((done / quota) * 100);
+                document.getElementById('progression').innerText = percent + "%";
+            }
+        });
+    </script>
+
+</body>
+</html>
