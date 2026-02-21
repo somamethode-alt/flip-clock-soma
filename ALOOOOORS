@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sōma Book - Ultimate Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --cover-bg: #E1E3E3; --page-color: #ffffff; --review-text: #5a4d44; }
+
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            font-family: 'Inter', sans-serif; background-color: #f0f0f0; 
+            overflow: hidden; display: flex; justify-content: center; align-items: center;
+        }
+
+        .grain { position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.04; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+
+        #book-wrapper { width: 100vw; height: 100vh; background: var(--page-color); position: relative; overflow: hidden; transition: filter 0.5s ease; }
+        
+        #cover { 
+            position: absolute; inset: 0; background-color: var(--cover-bg); 
+            z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: space-between; 
+            padding: 8% 20px; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+            cursor: pointer; background-size: cover; background-position: center;
+        }
+        #cover.opened { transform: translateX(-100%); }
+        
+        .notif-area { width: 90%; max-width: 400px; z-index: 1100; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); pointer-events: none; }
+
+        /* STICKERS */
+        .sticker-wrapper { position: absolute; cursor: move; user-select: none; z-index: 10; touch-action: none; display: inline-block; line-height: 0; padding: 5px; }
+        .sticker-wrapper img { width: 100%; height: auto; pointer-events: none; mix-blend-mode: multiply; }
+        .stk-ctrl { position: absolute; top: -10px; right: -10px; display: flex; gap: 5px; opacity: 0; transition: 0.3s; }
+        .sticker-wrapper:hover .stk-ctrl { opacity: 1; }
+        .stk-btn { background: white; border: 1px solid #ccc; border-radius: 50%; width: 22px; height: 22px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .stk-del { color: #e74c3c; border-color: #e74c3c; }
+
+        /* ONGLETS */
+        #tabs-container { position: absolute; right: 0; top: 60px; display: flex; flex-direction: column; gap: 2px; z-index: 2; }
+        .tab { width: 45px; height: 50px; border-radius: 8px 0 0 8px; cursor: pointer; transition: 0.4s; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; box-shadow: -2px 2px 5px rgba(0,0,0,0.1); }
+
+        /* PAGES */
+        #pages-slider { width: 100%; height: 100%; display: flex; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .page-surface { min-width: 100vw; height: 100vh; box-sizing: border-box; padding: 100px 10% 40px 10%; position: relative; outline: none; overflow-y: auto; }
+
+        .nav-zone { position: absolute; top: 0; bottom: 0; width: 80px; display: flex; align-items: center; justify-content: center; z-index: 100; cursor: pointer; opacity: 0.1; transition: 0.3s; writing-mode: vertical-rl; text-transform: uppercase; font-size: 10px; letter-spacing: 4px; font-weight: 600; }
+        .nav-zone:hover { opacity: 0.6; background: rgba(0,0,0,0.02); }
+        .nav-next { right: 0; } .nav-prev { left: 0; transform: rotate(180deg); }
+
+        .toolbar-top { position: absolute; top: 25px; right: 60px; display: flex; gap: 20px; z-index: 1100; }
+        .tool-icon { cursor: pointer; opacity: 0.6; }
+        .tool-icon svg { width: 22px; height: 22px; stroke: #333; }
+
+        /* REVIEW WIDGET */
+        .review-card { border: 1px solid #333; padding: 25px; background: #fff; max-width: 800px; margin: 20px auto; color: var(--review-text); position: relative; z-index: 1; display: flex; flex-direction: column; gap: 20px; }
+        .rev-top-section { display: grid; grid-template-columns: 180px 1fr; gap: 30px; }
+        .rev-photo-box { width: 180px; height: 260px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #ccc; cursor: pointer; background-size: cover; background-position: center; }
+        .rev-field { border-bottom: 1px solid #f0f0f0; display: flex; align-items: baseline; gap: 10px; padding: 8px 0; }
+        .rev-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; min-width: 85px; }
+        .rev-input { border: none; outline: none; flex: 1; font-family: 'Inter'; font-size: 13px; background: transparent; }
+        
+        /* RATING SYSTEM */
+        .rev-rating-area { margin-top: 15px; cursor: pointer; font-size: 26px; user-select: none; position: relative; display: inline-block; }
+        .rating-selector-popup { position: absolute; top: -45px; left: 0; background: white; border: 1px solid #ddd; border-radius: 20px; padding: 5px 15px; display: none; gap: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 100; animation: slideIn 0.2s ease; }
+
+        .rev-bottom-section { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .rev-block { border: 1px solid #eee; padding: 15px; min-height: 100px; position: relative; }
+        .rev-block-label { position: absolute; top: -8px; left: 10px; background: #fff; padding: 0 5px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
+
+        /* iMESSAGE NOTIF */
+        .imessage-notif {
+            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px);
+            border-radius: 18px; padding: 14px; margin-bottom: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.5);
+            animation: slideIn 0.5s ease forwards; cursor: pointer; pointer-events: auto;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;
+        }
+        .imessage-notif.removing { transform: translateY(-100px); opacity: 0; pointer-events: none; }
+        .imessage-header { display: flex; justify-content: space-between; font-size: 10px; color: #666; font-weight: 700; margin-bottom: 4px; }
+        .imessage-body { font-size: 13px; color: #000; line-height: 1.4; }
+        .imessage-footer { font-size: 9px; color: #999; margin-top: 6px; text-align: right; font-style: italic; }
+
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* MODALS */
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 20px; z-index: 10001; width: 320px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.1); z-index: 10000; backdrop-filter: blur(2px); }
+        .btn-opt { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid #eee; background: #fff; border-radius: 10px; cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .palette-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin-top: 15px; }
+        .color-dot { width: 100%; aspect-ratio: 1; border-radius: 4px; cursor: pointer; }
+        
+        /* PAPIERS */
+        .paper-blank { background-image: none; }
+        .paper-lined { background-image: repeating-linear-gradient(transparent 0px, transparent 31px, rgba(0,0,0,0.05) 32px); }
+        .paper-grid { background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg,rgba(0,0,0,0.05) 1px, transparent 1px); background-size:30px 30px; }
+        .paper-dots { background-image: radial-gradient(rgba(0,0,0,0.1) 1px, transparent 1px); background-size: 25px 25px; }
+
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+    <div id="overlay" onclick="closeModals()"></div>
+
+    <div id="book-wrapper">
+        <div id="page-notif-area" class="notif-area"></div>
+        <div class="toolbar-top">
+            <div class="tool-icon" onclick="openModal('reviewPopup')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+            <div class="tool-icon" onclick="document.getElementById('stickerUpload').click()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+            <div class="tool-icon" onclick="openModal('formatModal')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></div>
+            <div class="tool-icon" onclick="openModal('paperModal')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg></div>
+            <div class="tool-icon" onclick="openModal('colorModal')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></div>
+        </div>
+
+        <div id="tabs-container"></div>
+        <div id="cover" onclick="openBook()">
+            <div id="cover-notif-area" class="notif-area" onclick="event.stopPropagation()"></div>
+            <div style="font-family: 'Playfair Display', serif; font-size: 60px;">Sōma Book</div>
+            <input type="text" id="userName" placeholder="PRÉNOM ET NOM" style="border:none; border-bottom:2px solid #000; text-align: center; font-size: 18px; width: 300px; background: transparent; outline:none;" onclick="event.stopPropagation()">
+            <div style="font-size: 32px; letter-spacing: 15px;">SŌMA</div>
+        </div>
+
+        <div class="nav-zone nav-prev" onclick="prevPage()">←</div>
+        <div class="nav-zone nav-next" onclick="nextPage()">→</div>
+        <div id="pages-slider"></div>
+    </div>
+
+    <div id="formatModal" class="modal">
+        <button class="btn-opt" onmousedown="event.preventDefault()" onclick="currentFormatAction='foreColor'">Couleur</button>
+        <button class="btn-opt" onmousedown="event.preventDefault()" onclick="currentFormatAction='hiliteColor'">Surligner</button>
+        <div class="palette-grid" id="formatPalette"></div>
+    </div>
+    <div id="reviewPopup" class="modal"><button class="btn-opt" onclick="insertReviewWidget()">AJOUTER REVIEW COMPLETE</button></div>
+    
+    <div id="paperModal" class="modal">
+        <button class="btn-opt" onclick="changePaper('paper-blank')">Vierge</button>
+        <button class="btn-opt" onclick="changePaper('paper-lined')">Ligné</button>
+        <button class="btn-opt" onclick="changePaper('paper-grid')">Quadrillé</button>
+        <button class="btn-opt" onclick="changePaper('paper-dots')">Pointillé</button>
+    </div>
+
+    <div id="colorModal" class="modal"><select id="colorTarget" class="btn-opt"><option value="tab">Onglet</option><option value="cover">Couverture</option><option value="page">Page</option></select><div class="palette-grid" id="colorPalette"></div></div>
+
+    <input type="file" id="revImgUpload" hidden onchange="handleRevImage(this)">
+    <input type="file" id="stickerUpload" hidden onchange="handleSticker(this)">
+
+    <script>
+        const colors = ["#FDFBF7","#E1E3E3","#DFD8D5","#D8D5D2","#E6D4C4","#BAB1B0","#898684","#F2F8F8","#C3CED1","#B1A6A6","#B0AEB4","#A2A09A","#6F6869","#E8E7E7","#EEE9E9","#D5C7B3","#E2D7D4","#B0A19F","#C09D89","#D0CFCD","#E9F0F0","#E4DDD4","#B1B6AF","#D7D8D2","#B6AD9E","#DFE5E5","#E4E9EC","#B8BFBA","#8F877F","#859A9E","#BDD2E0","#F8FCFD","#E9EDEE","#CFCFD4","#E2DFD7","#E2D5D5","#DED0C7","#F6F2F0","#D4C1BA","#D0C9CB","#C1B2B1"];
+        let tabsData = JSON.parse(localStorage.getItem('soma_v8')) || [{ color: "#E1E3E3", content: "", paper: "paper-lined", paperColor: "#ffffff" }];
+        let currentIdx = 0, lastRevBox = null, currentFormatAction = 'foreColor', ratingSymbol = '★', pressTimer, savedRange = null;
+        let dismissedNotifs = [];
+
+        function openBook() { document.getElementById('cover').classList.add('opened'); initBook(); }
+        function initBook() { renderPages(); updateNavigation(); }
+
+        function renderPages() {
+            const slider = document.getElementById('pages-slider');
+            slider.innerHTML = "";
+            tabsData.forEach((page, i) => {
+                const div = document.createElement('div');
+                div.className = `page-surface ${page.paper}`;
+                div.style.backgroundColor = page.paperColor || "#ffffff";
+                div.contentEditable = true;
+                div.innerHTML = page.content;
+                div.oninput = () => { save(); refreshGlobalNotifs(); };
+                div.onmouseup = div.ontouchend = () => {
+                    const sel = window.getSelection();
+                    if (sel.rangeCount > 0) savedRange = sel.getRangeAt(0);
+                };
+                slider.appendChild(div);
+                initStickers(div);
+            });
+            const container = document.getElementById('tabs-container');
+            container.innerHTML = "";
+            tabsData.forEach((t, i) => {
+                const el = document.createElement("div"); el.className = "tab"; el.style.background = t.color; el.textContent = i + 1; el.onclick = () => goToPage(i); container.appendChild(el);
+            });
+            refreshGlobalNotifs();
+        }
+
+        // iMESSAGE NOTIFICATIONS
+        function refreshGlobalNotifs() {
+            const cards = document.querySelectorAll('.review-card');
+            const areas = [document.getElementById('cover-notif-area'), document.getElementById('page-notif-area')];
+            areas.forEach(a => a.innerHTML = "");
+
+            cards.forEach((card, cardIdx) => {
+                if (dismissedNotifs.includes(cardIdx)) return;
+
+                const title = card.querySelector('.b-title').value || "";
+                const total = parseInt(card.querySelector('.total-pg').value);
+                const read = parseInt(card.querySelector('.read-pg').value);
+                const endStr = card.querySelector('.date-end').value;
+
+                if (title && total && endStr && !isNaN(read) && read < total) {
+                    const today = new Date();
+                    const endDate = new Date(endStr);
+                    const diffTime = endDate - today;
+                    const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+                    const pagesToRead = total - read;
+                    const perDay = Math.ceil(pagesToRead / diffDays);
+                    
+                    let msg = `Il te reste ${pagesToRead} pages pour finir "${title}". Tu devrais lire environ ${perDay} pages par jour !`;
+                    if (diffTime < 0) msg = `Tu as dépassé la date pour "${title}". Il te reste ${pagesToRead} pages !`;
+
+                    areas.forEach(area => {
+                        const notif = document.createElement('div');
+                        notif.className = "imessage-notif";
+                        notif.innerHTML = `<div class="imessage-header"><span>SŌMA BOOK</span><span>maintenant</span></div><div class="imessage-body">${msg}</div><div class="imessage-footer">Signé, Fondatrice Sōma</div>`;
+                        notif.onclick = (e) => { 
+                            e.stopPropagation(); 
+                            dismissedNotifs.push(cardIdx); 
+                            notif.classList.add('removing'); 
+                            setTimeout(() => refreshGlobalNotifs(), 400); 
+                        };
+                        area.appendChild(notif);
+                    });
+                }
+            });
+        }
+
+        function handleSticker(input) {
+            if (input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const id = 'stk_' + Date.now();
+                    const wrap = `<div id="${id}" class="sticker-wrapper" style="top:150px; left:150px; width:120px;" contenteditable="false">
+                        <div class="stk-ctrl"><div class="stk-btn" onclick="resizeManual('${id}', 20)">+</div><div class="stk-btn" onclick="resizeManual('${id}', -20)">-</div><div class="stk-btn stk-del" onclick="document.getElementById('${id}').remove(); save();">×</div></div>
+                        <img src="${e.target.result}">
+                    </div>`;
+                    document.querySelectorAll('.page-surface')[currentIdx].innerHTML += wrap;
+                    save(); initStickers(document.querySelectorAll('.page-surface')[currentIdx]);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function initStickers(container) {
+            container.querySelectorAll('.sticker-wrapper').forEach(el => {
+                el.onpointerdown = (e) => {
+                    if(e.target.classList.contains('stk-btn')) return;
+                    let sX = e.clientX - el.offsetLeft, sY = e.clientY - el.offsetTop;
+                    document.onpointermove = (ev) => { el.style.left = (ev.clientX - sX) + 'px'; el.style.top = (ev.clientY - sY) + 'px'; };
+                    document.onpointerup = () => { document.onpointermove = null; save(); };
+                };
+            });
+        }
+
+        function insertReviewWidget() {
+            const widget = `<div class="review-card" contenteditable="false">
+                <div class="rev-top-section">
+                    <div class="rev-photo-box" onclick="triggerRevImg(this)">PHOTO</div>
+                    <div class="rev-form-grid">
+                        <div class="rev-field"><span class="rev-label">Titre</span><input class="rev-input b-title" type="text" oninput="this.setAttribute('value', this.value); save(); refreshGlobalNotifs()"></div>
+                        <div class="rev-field"><span class="rev-label">Total Pages</span><input class="rev-input total-pg" type="number" oninput="this.setAttribute('value', this.value); save(); refreshGlobalNotifs()"></div>
+                        <div class="rev-field"><span class="rev-label">Pages Lues</span><input class="rev-input read-pg" type="number" oninput="this.setAttribute('value', this.value); save(); refreshGlobalNotifs()"></div>
+                        <div class="rev-field"><span class="rev-label">Date Fin</span><input class="rev-input date-end" type="date" oninput="this.setAttribute('value', this.value); save(); refreshGlobalNotifs()"></div>
+                        <div class="rev-rating-area" onmousedown="startPress(this)" onmouseup="endPress(event, this)" ontouchstart="startPress(this)" ontouchend="endPress(event, this)">
+                            <div class="rating-selector-popup"><span onclick="changeSymbol('★', this)">★</span><span onclick="changeSymbol('♥', this)">♥</span><span onclick="changeSymbol('🔥', this)">🔥</span></div>
+                            <span class="stars-display">☆☆☆☆☆</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="rev-bottom-section">
+                    <div class="rev-block"><span class="rev-block-label">Avis</span><div class="rev-content" contenteditable="true">...</div></div>
+                    <div class="rev-block"><span class="rev-block-label">Citation</span><div class="rev-content" contenteditable="true">"..."</div></div>
+                </div>
+            </div><br>`;
+            document.querySelectorAll('.page-surface')[currentIdx].innerHTML += widget;
+            save(); closeModals();
+        }
+
+        function startPress(el) { pressTimer = setTimeout(() => { el.querySelector('.rating-selector-popup').style.display = 'flex'; }, 600); }
+        function endPress(e, el) {
+            clearTimeout(pressTimer);
+            if (e.target.closest('.rating-selector-popup')) return;
+            const rect = el.getBoundingClientRect();
+            const count = Math.ceil(((e.clientX || e.changedTouches[0].clientX) - rect.left) / rect.width * 5);
+            const sym = el.dataset.symbol || '★';
+            el.querySelector('.stars-display').innerHTML = `<span style="color:#f1c40f">${sym.repeat(Math.min(5, count))}</span>${'☆'.repeat(Math.max(0, 5-count))}`;
+            save();
+        }
+        function changeSymbol(sym, btn) { const area = btn.closest('.rev-rating-area'); area.dataset.symbol = sym; area.querySelector('.rating-selector-popup').style.display = 'none'; save(); }
+
+        function updateNavigation() { document.getElementById('pages-slider').style.transform = `translateX(-${currentIdx * 100}vw)`; }
+        function nextPage() { save(); if (currentIdx < tabsData.length - 1) currentIdx++; else { tabsData.push({ color: "#E1E3E3", content: "", paper: "paper-lined", paperColor: "#ffffff" }); renderPages(); currentIdx++; } updateNavigation(); }
+        function prevPage() { save(); if (currentIdx > 0) { currentIdx--; updateNavigation(); } else document.getElementById('cover').classList.remove('opened'); }
+        function goToPage(i) { save(); currentIdx = i; updateNavigation(); }
+        function resizeManual(id, delta) { const el = document.getElementById(id); const newWidth = Math.max(40, (parseInt(el.style.width) || 120) + delta); el.style.width = newWidth + 'px'; save(); }
+        function changePaper(s) { tabsData[currentIdx].paper = s; renderPages(); closeModals(); save(); }
+        function openModal(id) { document.getElementById(id).style.display='block'; document.getElementById('overlay').style.display='block'; }
+        function closeModals() { document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); document.getElementById('overlay').style.display='none'; }
+        function triggerRevImg(el) { lastRevBox = el; document.getElementById('revImgUpload').click(); }
+        function handleRevImage(i) { if (i.files[0]) { const r = new FileReader(); r.onload = e => { lastRevBox.style.backgroundImage = `url(${e.target.result})`; lastRevBox.textContent = ""; save(); }; r.readAsDataURL(i.files[0]); } }
+        
+        function save() { 
+            const slider = document.getElementById('pages-slider'); 
+            if(slider && slider.children[currentIdx]) {
+                tabsData[currentIdx].content = slider.children[currentIdx].innerHTML;
+            }
+            localStorage.setItem('soma_v8', JSON.stringify(tabsData)); 
+        }
+
+        window.onload = () => {
+            const fP = document.getElementById('formatPalette'), cP = document.getElementById('colorPalette');
+            colors.forEach(c => {
+                const d1 = document.createElement('div'); d1.className='color-dot'; d1.style.background=c; d1.onclick=()=> {
+                    const target = document.getElementById('colorTarget').value;
+                    if(target === 'tab') tabsData[currentIdx].color = c;
+                    else if (target === 'cover') document.getElementById('cover').style.backgroundColor = c;
+                    else tabsData[currentIdx].paperColor = c;
+                    renderPages(); save(); closeModals();
+                }; 
+                cP.appendChild(d1);
+                const d2 = document.createElement('div'); d2.className='color-dot'; d2.style.background=c; 
+                d2.onmousedown = (e) => e.preventDefault();
+                d2.onclick=()=> {
+                    if (savedRange) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedRange); }
+                    document.execCommand(currentFormatAction, false, c); save(); closeModals();
+                };
+                fP.appendChild(d2);
+            });
+            initBook();
+        };
+    </script>
+</body>
+</html>
