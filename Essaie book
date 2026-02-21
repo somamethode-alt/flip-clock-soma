@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon Carnet BookTok - Allié Premium</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Indie+Flower&family=Kalam:wght@300;400&display=swap');
+
+        :root {
+            --journal-bg: #fdfaf0;
+            --ink: #3d2b1f;
+            --dust-level: 0;
+            --plant-health: 1;
+        }
+
+        body {
+            background: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Kalam', cursive;
+        }
+
+        /* --- LE CARNET --- */
+        #notebook {
+            width: 95vw;
+            height: 90vh;
+            background: var(--journal-bg);
+            box-shadow: 10px 10px 30px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            display: flex;
+            position: relative;
+            border: 2px solid #dcd1b3;
+            background-image: radial-gradient(#d1d1d1 1px, transparent 1px);
+            background-size: 25px 25px; /* Points Bullet Journal */
+        }
+
+        /* --- ONGLETS LATÉRAUX (Photo 1) --- */
+        .sidebar-tabs {
+            position: absolute;
+            right: -40px;
+            top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .tab {
+            width: 40px;
+            height: 60px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            writing-mode: vertical-rl;
+            text-align: center;
+            font-size: 12px;
+            color: white;
+            transition: 0.3s;
+        }
+        .tab:hover { transform: translateX(5px); }
+
+        /* --- PAGES --- */
+        .page {
+            flex: 1;
+            padding: 40px;
+            display: none;
+            overflow-y: auto;
+        }
+        .page.active { display: block; }
+
+        /* --- DESIGN ÉTAGÈRE (Photo 2) --- */
+        .bujo-shelf {
+            border-bottom: 4px solid #8b5a2b;
+            margin: 40px 0;
+            display: flex;
+            align-items: flex-end;
+            position: relative;
+            padding-bottom: 2px;
+        }
+
+        /* Poussière sur le bois */
+        .bujo-shelf::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 5px;
+            background: rgba(150,150,150, var(--dust-level));
+        }
+
+        .bujo-book {
+            width: 30px;
+            height: 120px;
+            border: 2px solid var(--ink);
+            background: white;
+            margin-right: 5px;
+            border-radius: 3px 3px 0 0;
+            transition: 0.3s;
+        }
+
+        .plant-illustration {
+            position: absolute;
+            width: 60px;
+            filter: sepia(calc(1 - var(--plant-health))) brightness(var(--plant-health));
+        }
+
+        /* BOUTON TOURNER LA PAGE */
+        .flip-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 60px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        /* STYLE MANUSCRIT DES BOUTONS */
+        button {
+            background: none;
+            border: 2px solid var(--ink);
+            font-family: 'Indie Flower', cursive;
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div id="notebook">
+    <div class="sidebar-tabs">
+        <div class="tab" style="background:#f28d8d;" onclick="showPage(1)">📚 Cover</div>
+        <div class="tab" style="background:#f2c38d;" onclick="showPage(2)">🏠 Dash</div>
+        <div class="tab" style="background:#f2eb8d;" onclick="showPage(3)">⏱️ Studio</div>
+        <div class="tab" style="background:#baf28d;" onclick="showPage(4)">📱 Prod</div>
+        <div class="tab" style="background:#8df2e3;" onclick="showPage(5)">💰 Biz</div>
+        <div class="tab" style="background:#8dbaf2;" onclick="showPage(6)">📅 Cal</div>
+    </div>
+
+    <div id="page1" class="page active">
+        <h1 style="text-align:center;">Ma Bibliothèque Magique</h1>
+        
+        <div style="display:flex; justify-content: space-around;">
+            <div class="bujo-shelf" style="width:40%;">
+                <img src="https://cdn-icons-png.flaticon.com/512/3571/3571710.png" class="plant-illustration" style="top:-30px; left:0;">
+                <div class="bujo-book"></div><div class="bujo-book"></div>
+            </div>
+            <div style="width:100px; height:120px; border:3px solid var(--ink); border-radius: 50px 50px 0 0; background:#1a110a; color:white; text-align:center; padding-top:20px;">🌙</div>
+            <div class="bujo-shelf" style="width:40%;">
+                <div class="bujo-book"></div><div class="bujo-book"></div>
+            </div>
+        </div>
+
+        <div class="bujo-shelf">
+            <img src="https://cdn-icons-png.flaticon.com/512/3571/3571710.png" class="plant-illustration" style="top:-30px; right:0;">
+            <div class="bujo-book"></div><div class="bujo-book"></div><div class="bujo-book"></div><div class="bujo-book"></div>
+        </div>
+
+        <button onclick="scanISBN()">📸 Scanner un livre</button>
+        <div class="flip-btn" onclick="showPage(2)">Tourner la page ➔</div>
+    </div>
+
+    <div id="page2" class="page">
+        <h2>Dashboard - Command Center</h2>
+        <p>⚠️ <b>Alertes :</b> 3 publications en retard !</p>
+        <div style="border:1px solid #000; padding:10px; border-radius:10px;">
+            Statistiques du mois : +12% d'engagement
+        </div>
+        <div class="flip-btn" onclick="showPage(3)">Tourner la page ➔</div>
+    </div>
+
+    <div id="page3" class="page">
+        <h2>Studio de Lecture</h2>
+        <div style="text-align:center; font-size:40px;">25:00</div>
+        <button>Coup de Coeur ❤️</button>
+        <button>Choc 😲</button>
+        <div class="flip-btn" onclick="showPage(4)">Tourner la page ➔</div>
+    </div>
+
+    </div>
+
+<script>
+    function showPage(num) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page' + num).classList.add('active');
+    }
+
+    // GESTION SCAN ISBN
+    function scanISBN() {
+        const isbn = prompt("Visez le code-barres (Simulation) :");
+        if(isbn) {
+            alert("Livre détecté ! Ajout à l'étagère...");
+            // Logique pour colorer un livre vide ici
+        }
+    }
+
+    // SYSTÈME DE VIE (PLANTES & POUSSIÈRE)
+    function checkVitals() {
+        const last = localStorage.getItem('lastVisit') || Date.now();
+        const diff = (Date.now() - last) / (1000 * 60 * 60 * 24); // Jours
+
+        if(diff > 3) {
+            document.documentElement.style.setProperty('--plant-health', 0.5);
+            document.documentElement.style.setProperty('--dust-level', 0.3);
+        }
+        localStorage.setItem('lastVisit', Date.now());
+    }
+
+    window.onload = checkVitals;
+</script>
+
+</body>
+</html>
