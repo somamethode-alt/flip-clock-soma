@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sōma Book - Ultimate Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --cover-bg: #E1E3E3; --page-color: #ffffff; }
+
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            font-family: 'Inter', sans-serif; background-color: #f0f0f0; 
+            overflow: hidden; display: flex; justify-content: center; align-items: center;
+        }
+
+        .grain { position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.04; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+
+        #book-wrapper {
+            width: 100vw; height: 100vh;
+            background: var(--page-color); position: relative;
+            overflow: hidden; transition: background 0.3s ease;
+        }
+
+        /* --- COUVERTURE --- */
+        #cover { 
+            position: absolute; inset: 0; background-color: var(--cover-bg); 
+            z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: space-between; 
+            padding: 10% 20px; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+            cursor: pointer; background-size: cover; background-position: center;
+        }
+        #cover.opened { transform: translateX(-100%); }
+
+        /* --- ONGLETS --- */
+        #tabs-container { 
+            position: absolute; right: 0; top: 60px; 
+            display: flex; flex-direction: column; gap: 2px; z-index: 2; 
+        }
+        .tab { 
+            width: 45px; height: 50px; border-radius: 8px 0 0 8px; 
+            cursor: pointer; transition: transform 0.4s ease, opacity 0.4s; 
+            display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;
+            box-shadow: -2px 2px 5px rgba(0,0,0,0.1);
+        }
+        .tab.hidden-left { transform: translateX(60px); opacity: 0; pointer-events: none; }
+
+        /* --- PAGES --- */
+        #pages-slider {
+            width: 100%; height: 100%;
+            display: flex; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .page-surface {
+            min-width: 100vw; height: 100vh;
+            box-sizing: border-box; padding: 100px 15% 40px 15%;
+            position: relative; outline: none; overflow-y: auto;
+        }
+
+        /* --- NAVIGATION --- */
+        .nav-zone {
+            position: absolute; top: 0; bottom: 0; width: 100px;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; cursor: pointer; transition: 0.3s;
+            writing-mode: vertical-rl; text-transform: uppercase; font-size: 10px;
+            letter-spacing: 4px; font-weight: 600; opacity: 0.2;
+        }
+        .nav-zone:hover { opacity: 0.8; background: rgba(0,0,0,0.02); }
+        .nav-next { right: 0; }
+        .nav-prev { left: 0; transform: rotate(180deg); }
+
+        /* --- TOOLBAR --- */
+        .toolbar-top {
+            position: absolute; top: 25px; right: 60px;
+            display: flex; gap: 25px; z-index: 1100;
+        }
+        .tool-icon { cursor: pointer; opacity: 0.6; transition: 0.3s; }
+        .tool-icon:hover { opacity: 1; transform: scale(1.1); }
+        .tool-icon svg { width: 24px; height: 24px; stroke: #333; }
+
+        /* --- PAPIERS --- */
+        .paper-lined { background-image: repeating-linear-gradient(transparent 0px, transparent 31px, rgba(0,0,0,0.05) 32px); }
+        .paper-grid { background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg,rgba(0,0,0,0.05) 1px, transparent 1px); background-size:30px 30px; }
+        .paper-dots { background-image: radial-gradient(rgba(0,0,0,0.1) 1px, transparent 1px); background-size:25px 25px; }
+
+        /* --- MODALS --- */
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 20px; z-index: 10001; width: 320px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 10000; backdrop-filter: blur(4px); }
+        .palette-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin-top: 15px; }
+        .color-dot { width: 100%; aspect-ratio: 1; border-radius: 4px; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); }
+        .btn-opt { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid #eee; background: #fff; border-radius: 10px; cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .btn-opt:hover { background: #f9f9f9; }
+
+        /* --- STYLE DU WIDGET REVIEW --- */
+        .review-card {
+            border: 1px solid #333; padding: 20px; background: #fff; max-width: 600px;
+            margin: 20px auto; color: #333; text-align: left; pointer-events: auto;
+        }
+        .rev-row { display: grid; grid-template-columns: 140px 1fr; gap: 20px; margin-bottom: 15px; }
+        .rev-photo-box { width: 140px; height: 190px; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999; cursor: pointer; background-size: cover; background-position: center; }
+        .rev-info input { width: 100%; border: none; border-bottom: 1px solid #eee; padding: 5px 0; margin-bottom: 10px; outline: none; font-family: 'Inter'; font-size: 13px; }
+        .rev-rating { font-size: 20px; color: #ccc; margin-bottom: 10px; cursor: pointer; }
+        .rev-rating span.active { color: #f1c40f; }
+        .rev-tags { display: flex; gap: 10px; font-size: 10px; font-weight: bold; margin-bottom: 10px; }
+        .rev-text-area { border: 1px solid #eee; padding: 10px; min-height: 80px; font-size: 12px; margin-top: 10px; outline: none; }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+    <div id="overlay" onclick="closeModals()"></div>
+
+    <div id="book-wrapper">
+        <div class="toolbar-top">
+            <div class="tool-icon" onclick="openModal('reviewPopup')" title="Review">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+            <div class="tool-icon" onclick="document.getElementById('imgUpload').click()" title="Image de couverture">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <div class="tool-icon" onclick="openModal('paperModal')" title="Style de papier">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+            </div>
+            <div class="tool-icon" onclick="openModal('colorModal')" title="Couleurs">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            </div>
+            <div class="tool-icon" onclick="resetCurrentPage()" title="Effacer la page">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </div>
+        </div>
+
+        <input type="file" id="imgUpload" hidden onchange="handleImage(this)">
+        <input type="file" id="revImgUpload" hidden onchange="handleRevImage(this)">
+        <div id="tabs-container"></div>
+
+        <div id="cover" onclick="openBook()">
+            <div style="font-family: 'Playfair Display', serif; font-size: 60px; letter-spacing: 5px;">Sōma Book</div>
+            <div onclick="event.stopPropagation()">
+                <input type="text" id="userName" placeholder="PRÉNOM ET NOM" style="border:none; border-bottom:2px solid #000; text-align: center; font-size: 18px; width: 350px; background: transparent; letter-spacing: 5px; text-transform: uppercase; outline:none;">
+            </div>
+            <div style="font-size: 32px; letter-spacing: 15px; font-weight: 300;">SŌMA</div>
+        </div>
+
+        <div class="nav-zone nav-prev" onclick="prevPage()">← Revenir</div>
+        <div class="nav-zone nav-next" onclick="nextPage()">Tourner la page →</div>
+
+        <div id="pages-slider"></div>
+    </div>
+
+    <div id="reviewPopup" class="modal">
+        <p style="font-size: 11px; font-weight: bold; margin-bottom: 15px;">MENU</p>
+        <button class="btn-opt" onclick="insertReviewWidget()">REVIEW</button>
+        <button class="btn-opt" style="color:red;" onclick="closeModals()">Fermer</button>
+    </div>
+
+    <div id="paperModal" class="modal">
+        <p style="font-size: 11px; font-weight: bold; margin-bottom: 15px;">STYLE DE PAPIER</p>
+        <button class="btn-opt" onclick="changePaper('paper-lined')">Ligné</button>
+        <button class="btn-opt" onclick="changePaper('paper-grid')">Quadrillé</button>
+        <button class="btn-opt" onclick="changePaper('paper-dots')">Pointillés</button>
+        <button class="btn-opt" onclick="changePaper('paper-blank')">Uni</button>
+    </div>
+
+    <div id="colorModal" class="modal">
+        <p style="font-size: 11px; font-weight: bold; margin-bottom: 10px;">PERSONNALISATION</p>
+        <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+            <button class="btn-opt" style="font-size: 9px;" onclick="targetColor='tab'">Onglet</button>
+            <button class="btn-opt" style="font-size: 9px;" onclick="targetColor='cover'">Couv.</button>
+            <button class="btn-opt" style="font-size: 9px;" onclick="targetColor='paper'">Papier</button>
+        </div>
+        <div class="palette-grid" id="paletteGrid"></div>
+    </div>
+
+    <script>
+        const colors = ["#FDFBF7","#E1E3E3","#DFD8D5","#D8D5D2","#E6D4C4","#BAB1B0","#898684","#F2F8F8","#C3CED1","#B1A6A6","#B0AEB4","#A2A09A","#6F6869","#E8E7E7","#EEE9E9","#D5C7B3","#E2D7D4","#B0A19F","#C09D89","#D0CFCD","#E9F0F0","#E4DDD4","#B1B6AF","#D7D8D2","#B6AD9E","#DFE5E5","#E4E9EC","#B8BFBA","#8F877F","#859A9E","#BDD2E0","#F8FCFD","#E9EDEE","#CFCFD4","#E2DFD7","#E2D5D5","#DED0C7","#F6F2F0","#D4C1BA","#D0C9CB","#C1B2B1"];
+        
+        let tabsData = JSON.parse(localStorage.getItem('soma_v4')) || [
+            { color: "#E1E3E3", content: "Page 1", paper: "paper-lined", paperColor: "#ffffff" }
+        ];
+        let currentIdx = 0;
+        let targetColor = 'tab';
+        let lastRevBox = null;
+
+        function openBook() { 
+            document.getElementById('cover').classList.add('opened'); 
+            initBook();
+        }
+
+        function initBook() {
+            renderPages();
+            updateNavigation();
+        }
+
+        function renderPages() {
+            const slider = document.getElementById('pages-slider');
+            slider.innerHTML = "";
+            tabsData.forEach((page, i) => {
+                const div = document.createElement('div');
+                div.className = `page-surface ${page.paper}`;
+                div.style.backgroundColor = page.paperColor || "#ffffff";
+                div.contentEditable = true;
+                div.innerHTML = page.content;
+                div.oninput = () => { tabsData[i].content = div.innerHTML; save(); };
+                slider.appendChild(div);
+            });
+
+            const container = document.getElementById('tabs-container');
+            container.innerHTML = "";
+            tabsData.forEach((t, i) => {
+                const el = document.createElement("div");
+                el.className = "tab";
+                el.style.background = t.color;
+                el.textContent = i + 1;
+                el.onclick = () => goToPage(i);
+                container.appendChild(el);
+            });
+        }
+
+        function insertReviewWidget() {
+            const widget = `
+                <div class="review-card" contenteditable="false">
+                    <div class="rev-row">
+                        <div class="rev-photo-box" onclick="triggerRevImg(this)">PHOTO</div>
+                        <div class="rev-info">
+                            <input type="text" placeholder="TITRE DU LIVRE">
+                            <input type="text" placeholder="AUTEUR">
+                            <div class="rev-rating" onclick="setWidgetStars(event)">☆☆☆☆☆</div>
+                            <div class="rev-tags">
+                                <span>LIVRE</span> | <span>E-BOOK</span> | <span>AUDIO</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rev-text-area" contenteditable="true">TON AVIS...</div>
+                </div><br>
+            `;
+            const pages = document.querySelectorAll('.page-surface');
+            pages[currentIdx].innerHTML += widget;
+            tabsData[currentIdx].content = pages[currentIdx].innerHTML;
+            save();
+            closeModals();
+        }
+
+        function triggerRevImg(el) { lastRevBox = el; document.getElementById('revImgUpload').click(); }
+
+        function handleRevImage(input) {
+            if (input.files && input.files[0] && lastRevBox) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    lastRevBox.style.backgroundImage = `url(${e.target.result})`;
+                    lastRevBox.textContent = "";
+                    save();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function setWidgetStars(e) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const count = Math.ceil(((e.clientX - rect.left) / rect.width) * 5);
+            e.currentTarget.innerHTML = `<span class="active">${"★".repeat(count)}</span>${"☆".repeat(5-count)}`;
+            save();
+        }
+
+        function updateNavigation() {
+            document.getElementById('pages-slider').style.transform = `translateX(-${currentIdx * 100}vw)`;
+            const allTabs = document.querySelectorAll('.tab');
+            allTabs.forEach((tab, i) => {
+                if (i < currentIdx) tab.classList.add('hidden-left');
+                else tab.classList.remove('hidden-left');
+            });
+        }
+
+        function nextPage() {
+            if (currentIdx < tabsData.length - 1) {
+                currentIdx++;
+            } else {
+                tabsData.push({ color: colors[Math.floor(Math.random()*colors.length)], content: "", paper: "paper-lined", paperColor: tabsData[currentIdx].paperColor });
+                renderPages();
+                currentIdx++;
+            }
+            updateNavigation();
+            save();
+        }
+
+        function prevPage() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                updateNavigation();
+            } else {
+                document.getElementById('cover').classList.remove('opened');
+            }
+        }
+
+        function goToPage(i) { currentIdx = i; updateNavigation(); }
+
+        function changePaper(style) {
+            tabsData[currentIdx].paper = style;
+            renderPages();
+            closeModals();
+            save();
+        }
+
+        function resetCurrentPage() {
+            if(confirm("Vider cette page ?")) {
+                tabsData[currentIdx].content = "";
+                renderPages();
+                save();
+            }
+        }
+
+        function openModal(id) { document.getElementById(id).style.display='block'; document.getElementById('overlay').style.display='block'; }
+        function closeModals() { document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); document.getElementById('overlay').style.display='none'; }
+
+        const grid = document.getElementById('paletteGrid');
+        colors.forEach(c => {
+            const d = document.createElement('div');
+            d.className = 'color-dot'; d.style.background = c;
+            d.onclick = () => {
+                if(targetColor === 'cover') {
+                    document.getElementById('cover').style.backgroundColor = c;
+                    document.getElementById('cover').style.backgroundImage = 'none';
+                    localStorage.setItem('soma_c_bg', c);
+                } else if(targetColor === 'paper') {
+                    tabsData[currentIdx].paperColor = c;
+                    renderPages();
+                } else {
+                    tabsData[currentIdx].color = c;
+                    renderPages();
+                }
+                closeModals();
+                save();
+            };
+            grid.appendChild(d);
+        });
+
+        function handleImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById('cover').style.backgroundImage = `url(${e.target.result})`;
+                    localStorage.setItem('soma_c_img', e.target.result);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function save() { 
+            const slider = document.getElementById('pages-slider');
+            if(slider.children[currentIdx]) {
+                tabsData[currentIdx].content = slider.children[currentIdx].innerHTML;
+            }
+            localStorage.setItem('soma_v4', JSON.stringify(tabsData)); 
+            localStorage.setItem('soma_user', document.getElementById('userName').value);
+        }
+
+        window.onload = () => {
+            const author = localStorage.getItem('soma_user');
+            if(author) document.getElementById('userName').value = author;
+            const img = localStorage.getItem('soma_c_img');
+            if(img) document.getElementById('cover').style.backgroundImage = `url(${img})`;
+            const col = localStorage.getItem('soma_c_bg');
+            if(col) document.getElementById('cover').style.backgroundColor = col;
+            initBook();
+        };
+    </script>
+</body>
+</html>
