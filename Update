@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Sōma Book - Expérience Tablette</title>
+    <style>
+        :root {
+            --bg-tablet: #e0e0e0;
+            --paper-color: #ffffff;
+            --tab-width: 40px;
+        }
+
+        body {
+            background-color: var(--bg-tablet);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+
+        /* BARRE D'OUTILS (En haut à droite - Photo 2) */
+        .toolbar {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            display: flex;
+            gap: 20px;
+            background: rgba(255,255,255,0.8);
+            padding: 10px 20px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        .tool {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .tool img, .tool-icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+        }
+
+        /* STRUCTURE DU LIVRE (Photo 3) */
+        .notebook-container {
+            position: relative;
+            width: 85vw;
+            height: 85vh;
+            background: white;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            display: flex;
+        }
+
+        /* Onglets Latéraux (Superposés comme sur la photo) */
+        .side-tabs {
+            position: absolute;
+            right: -35px; /* Ils dépassent du papier */
+            top: 50px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .tab {
+            width: 45px;
+            height: 60px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 3px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .tab:hover { transform: translateX(5px); }
+
+        /* ZONE DE PAPIER (Photo 1 - Dotted/Grille) */
+        .paper-content {
+            flex: 1;
+            margin-right: 10px;
+            position: relative;
+            overflow-y: auto;
+            /* Texture petits carreaux/points */
+            background-image: radial-gradient(#d1d1d1 1px, transparent 1px);
+            background-size: 20px 20px;
+            padding: 60px;
+        }
+
+        /* PERSONNALISATION MODALE */
+        .menu-modal {
+            display: none;
+            position: absolute;
+            top: 80px;
+            right: 40px;
+            background: white;
+            width: 250px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 20px;
+            z-index: 2000;
+        }
+
+        .menu-modal h3 { font-size: 14px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f8f8;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .color-picker {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .dot { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <div class="tool" onclick="document.getElementById('imgInput').click()">
+            <div class="tool-icon">🖼️</div><span>Image</span>
+        </div>
+        <div class="tool" onclick="resetContent()">
+            <div class="tool-icon">🗑️</div><span>Clear</span>
+        </div>
+        <div class="tool" onclick="toggleMenu('paperMenu')">
+            <div class="tool-icon">📄</div><span>Papier</span>
+        </div>
+        <div class="tool" onclick="toggleMenu('colorMenu')">
+            <div class="tool-icon">🎨</div><span>Couleurs</span>
+        </div>
+    </div>
+
+    <input type="file" id="imgInput" style="display:none" onchange="handleImage(this)">
+
+    <div class="notebook-container" id="mainBook">
+        <div class="paper-content" id="paper">
+            <h1 contenteditable="true">Titre de la page...</h1>
+            <p contenteditable="true">Clique ici pour commencer à écrire comme sur Goodnotes...</p>
+        </div>
+
+        <div class="side-tabs">
+            <div class="tab" style="background: #f2d7d5;"></div>
+            <div class="tab" style="background: #ebdef0;"></div>
+            <div class="tab" style="background: #d4e6f1;"></div>
+            <div class="tab" style="background: #d1f2eb;"></div>
+            <div class="tab" style="background: #fcf3cf;"></div>
+            <div class="tab" style="background: #f5cba7;"></div>
+        </div>
+    </div>
+
+    <div id="colorMenu" class="menu-modal">
+        <h3>Couleur Couverture</h3>
+        <div class="color-picker">
+            <div class="dot" style="background: #34495e" onclick="changeCover('#34495e')"></div>
+            <div class="dot" style="background: #e74c3c" onclick="changeCover('#e74c3c')"></div>
+            <div class="dot" style="background: #2ecc71" onclick="changeCover('#2ecc71')"></div>
+            <div class="dot" style="background: #f1c40f" onclick="changeCover('#f1c40f')"></div>
+            <div class="dot" style="background: #9b59b6" onclick="changeCover('#9b59b6')"></div>
+        </div>
+    </div>
+
+    <div id="paperMenu" class="menu-modal">
+        <h3>Type de Papier</h3>
+        <button class="option-btn" onclick="changePaper('dots')">Points (Dotted)</button>
+        <button class="option-btn" onclick="changePaper('lines')">Lignes (Ruled)</button>
+        <button class="option-btn" onclick="changePaper('blank')">Blanc Uni</button>
+    </div>
+
+    <script>
+        function toggleMenu(id) {
+            const menus = document.querySelectorAll('.menu-modal');
+            menus.forEach(m => { if(m.id !== id) m.style.display = 'none'; });
+            const target = document.getElementById(id);
+            target.style.display = target.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function changePaper(type) {
+            const p = document.getElementById('paper');
+            if(type === 'dots') p.style.backgroundImage = 'radial-gradient(#d1d1d1 1px, transparent 1px)';
+            if(type === 'lines') p.style.backgroundImage = 'linear-gradient(#eee 1px, transparent 1px)';
+            if(type === 'blank') p.style.backgroundImage = 'none';
+            toggleMenu('paperMenu');
+        }
+
+        function changeCover(color) {
+            document.getElementById('mainBook').style.backgroundColor = color;
+            // Si on change la couleur du "livre", on peut simuler la couverture
+            toggleMenu('colorMenu');
+        }
+
+        function handleImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.maxWidth = '300px';
+                    img.style.position = 'absolute';
+                    img.style.cursor = 'move';
+                    // Ici on pourrait ajouter du JS pour rendre l'image déplaçable
+                    document.getElementById('paper').appendChild(img);
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function resetContent() {
+            if(confirm("Effacer le contenu de la page ?")) {
+                document.getElementById('paper').innerHTML = '<h1 contenteditable="true">Titre...</h1>';
+            }
+        }
+    </script>
+</body>
+</html>
