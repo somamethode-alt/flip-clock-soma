@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SŌMA</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link rel="apple-touch-icon" href="https://i.ibb.co/m5Ym9p8/SOMA-ICON-4K.png">
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cover-bg: #E1E3E3;
+            --page-bg: #E1E3E3;
+            --header-table-bg: #E1E3E3;
+            --stat-envoye-bg: #ffffff;
+            --stat-attente-bg: #ffffff;
+            --stat-trouve-bg: #ffffff;
+        }
+
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background-color: #f0f0f0; overflow-x: hidden; }
+
+        .paper-grid { background-image: radial-gradient(rgba(0,0,0,0.1) 0.8px, transparent 0.8px); background-size: 20px 20px; }
+        .paper-lines { background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px); background-size: 100% 30px; }
+
+        .grain {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999; opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* NOTIFICATION IMESSAGE */
+        #imessage-notif {
+            position: fixed; top: -150px; left: 50%; transform: translateX(-50%);
+            width: 350px; 
+            background: linear-gradient(135deg, #ffafbd 0%, #ffc3a0 100%); 
+            backdrop-filter: blur(10px);
+            border-radius: 20px; padding: 15px; 
+            box-shadow: 0 15px 35px rgba(255, 175, 189, 0.4);
+            z-index: 10002; transition: top 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.4);
+            cursor: pointer;
+        }
+        #imessage-notif.show { top: 20px; }
+        .imessage-icon { width: 42px; height: 42px; background: #fff; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #ffafbd; font-weight: 900; font-size: 10px; }
+        .imessage-body { font-size: 13px; color: #000; font-weight: 500; }
+
+        /* BADGE SIMULÉ SUR LE BOUTON FERMER */
+        #badge-count {
+            position: absolute; top: -5px; right: -5px;
+            background: #d63031; color: white; border-radius: 50%;
+            width: 18px; height: 18px; font-size: 10px;
+            display: none; align-items: center; justify-content: center;
+            font-weight: bold; border: 2px solid var(--cover-bg);
+        }
+
+        #cover { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--cover-bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 60px 20px; box-sizing: border-box; transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: left center; cursor: pointer; }
+        #cover.opened { transform: rotateY(-115deg); pointer-events: none; }
+        #main-content { padding: 40px 20px; min-height: 100vh; background-color: var(--page-bg); opacity: 0; transition: opacity 0.5s; }
+        .visible { opacity: 1 !important; }
+        .top-menu { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .tools-right { display: flex; gap: 20px; }
+        .stats-container { display: flex; gap: 15px; margin-bottom: 30px; }
+        .stat-card { flex: 1; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(0,0,0,0.05); }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 20px; z-index: 10001; width: 340px; }
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); z-index: 10000; backdrop-filter: blur(2px); }
+        .registre-title { font-family: 'Playfair Display', serif; font-size: 34px; font-style: italic; margin: 20px 0; }
+        .table-container { background: rgba(255,255,255,0.3); border-radius: 15px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        th { padding: 15px; text-align: left; font-size: 10px; text-transform: uppercase; }
+        td { padding: 12px 15px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        input, select { border: 1px solid rgba(0,0,0,0.1); background: white; padding: 8px; border-radius: 4px; width: 100%; }
+        .urgent-relance { color: #d63031; font-weight: 800; }
+    </style>
+</head>
+<body>
+
+<div class="grain"></div>
+<div id="overlay" onclick="closeModals()"></div>
+
+<div id="imessage-notif" onclick="this.classList.remove('show')">
+    <div class="imessage-icon">SŌMA</div>
+    <div class="imessage-content">
+        <div class="imessage-body" id="imessage-text"></div>
+    </div>
+</div>
+
+<div id="book-wrapper">
+    <div id="cover" onclick="openBook()">
+        <div id="badge-count">0</div>
+        <div style="font-family: 'Playfair Display', serif; font-size: 40px; letter-spacing: 4px; margin-top: 10vh; text-align:center;">Suivi de candidature</div>
+        <div style="font-size: 26px; letter-spacing: 8px; font-weight: 300;">SŌMA</div>
+    </div>
+
+    <div id="main-content">
+        <div class="top-menu">
+            <button onclick="closeBook()" style="background:none; border:1px solid #000; padding:8px 18px; cursor:pointer; font-size:10px; text-transform:uppercase; border-radius:25px; font-weight:bold;">Refermer</button>
+            <div class="tools-right">
+                <button onclick="resetData()" style="color:#d63031; background:none; border:none; font-size:10px; font-weight:bold;">RESET</button>
+            </div>
+        </div>
+        <h1 class="registre-title">Registre de Prospection</h1>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Établissement</th><th>Date d'envoi</th><th>Relance</th><th>Réponse</th></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        <button onclick="addRow()" style="margin-top:20px; padding:12px 25px; background:#000; color:#fff; border-radius:30px; font-size:10px; font-weight:bold;">+ Nouvelle Ligne</button>
+    </div>
+</div>
+
+<script>
+    let candidatures = JSON.parse(localStorage.getItem('soma_v22')) || [];
+    let badgeNum = 0;
+
+    function openBook() { document.getElementById('cover').classList.add('opened'); document.getElementById('main-content').classList.add('visible'); }
+    function closeBook() { document.getElementById('cover').classList.remove('opened'); document.getElementById('main-content').classList.remove('visible'); }
+    function addRow() { candidatures.push({ id: Date.now(), nom: "", date: "", reponse: "Attente" }); render(); }
+
+    function resetData() { if(confirm("Supprimer tout ?")) { localStorage.removeItem('soma_v22'); location.reload(); } }
+
+    function render() {
+        const body = document.getElementById('tableBody'); body.innerHTML = "";
+        badgeNum = 0;
+        candidatures.forEach((c, i) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td><input type="text" value="${c.nom}" oninput="u(${i},'nom',this.value)"></td><td><input type="date" value="${c.date}" onchange="u(${i},'date',this.value)"></td><td id="relance-${i}">${calc(c.date, c.reponse, c.nom)}</td><td><select onchange="u(${i},'reponse',this.value)"><option value="Attente" ${c.reponse==='Attente'?'selected':''}>Attente</option><option value="Oui" ${c.reponse==='Oui'?'selected':''}>OUI</option></select></td>`;
+            body.appendChild(row);
+        });
+        updateBadge();
+    }
+
+    function u(i,k,v) { candidatures[i][k]=v; localStorage.setItem('soma_v22', JSON.stringify(candidatures)); render(); }
+
+    function calc(d, status, nom) { 
+        if(!d) return "-"; 
+        let dateR = new Date(d); dateR.setDate(dateR.getDate() + 10);
+        let today = new Date(); today.setHours(0,0,0,0);
+        if (today > dateR && status === "Attente") {
+            badgeNum++;
+            showIMessage(nom);
+            return `<span class="urgent-relance">RELANCER !</span>`;
+        }
+        return dateR.toLocaleDateString('fr-FR'); 
+    }
+
+    function updateBadge() {
+        const b = document.getElementById('badge-count');
+        if(badgeNum > 0) { b.innerText = badgeNum; b.style.display = 'flex'; }
+        else { b.style.display = 'none'; }
+    }
+
+    function showIMessage(n) {
+        document.getElementById('imessage-text').innerText = `Tu as oublié de relancer ta demande de stage pour ${n}`;
+        document.getElementById('imessage-notif').classList.add('show');
+    }
+
+    render();
+</script>
+</body>
+</html>
