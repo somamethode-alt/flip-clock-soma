@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SŌMA - Registre Professionnel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cover-bg: #E1E3E3;
+            --page-bg: #E1E3E3;
+            --header-table-bg: #E1E3E3;
+        }
+
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background-color: #f0f0f0; overflow-x: hidden; }
+
+        /* TEXTURES DE PAPIER */
+        .paper-grid { background-image: radial-gradient(rgba(0,0,0,0.1) 0.8px, transparent 0.8px); background-size: 20px 20px; }
+        .paper-lines { background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px); background-size: 100% 30px; }
+
+        .grain {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999; opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* COUVERTURE */
+        #cover {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--cover-bg); z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            padding: 60px 20px; box-sizing: border-box;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: left center;
+            box-shadow: inset -5px 0 10px rgba(0,0,0,0.1), 10px 0 30px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+        #cover.opened { transform: rotateY(-115deg); pointer-events: none; }
+
+        /* MENTION TOURNER LA PAGE CENTRÉE À DROITE */
+        .turn-page-hint { 
+            position: absolute; 
+            right: 25px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            writing-mode: vertical-rl; 
+            text-transform: uppercase; 
+            font-size: 10px; 
+            letter-spacing: 3px; 
+            opacity: 0.5; 
+            font-weight: 600; 
+        }
+
+        /* PAGE INTÉRIEURE */
+        #main-content { 
+            padding: 40px 20px; min-height: 100vh; 
+            background-color: var(--page-bg); 
+            opacity: 0; transition: opacity 0.5s; 
+        }
+        .visible { opacity: 1 !important; }
+
+        .top-menu { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .tools-right { display: flex; gap: 20px; }
+
+        /* MODALES */
+        .modal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 25px; border-radius: 20px; z-index: 10001; width: 340px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); z-index: 10000; backdrop-filter: blur(2px); }
+        .palette-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
+        .color-dot { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 1px solid #eee; }
+        .paper-opt { height: 45px; border: 1px solid #eee; margin-bottom: 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; text-transform: uppercase; font-weight: bold; background: #fff; }
+
+        .registre-title { font-family: 'Playfair Display', serif; font-size: 34px; font-style: italic; margin: 20px 0; }
+        
+        /* TABLEAU */
+        .table-container { background: rgba(255,255,255,0.3); border-radius: 15px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        thead { background-color: var(--header-table-bg); }
+        th { padding: 15px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        td { padding: 12px 15px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        
+        input, select { border: 1px solid rgba(0,0,0,0.1); background: white; padding: 8px; border-radius: 4px; width: 100%; font-family: inherit; }
+        .btn-cal { background: #000; color: #fff; border: none; padding: 6px 12px; font-size: 9px; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-weight: bold; }
+
+        .copyright { text-align: center; font-size: 9px; color: rgba(0,0,0,0.4); margin-top: 60px; letter-spacing: 3px; text-transform: uppercase; }
+    </style>
+</head>
+<body class="paper-uni">
+
+<div class="grain"></div>
+<div id="overlay" onclick="closeModals()"></div>
+
+<div id="zoneModal" class="modal">
+    <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">Personnalisation Couleurs</p>
+    <button onclick="openPalette('cover')" style="width:100%; padding:12px; margin-bottom:10px; cursor:pointer;">Couverture</button>
+    <button onclick="openPalette('page')" style="width:100%; padding:12px; margin-bottom:10px; cursor:pointer;">Fond de Page</button>
+    <button onclick="openPalette('header')" style="width:100%; padding:12px; cursor:pointer;">Header du Tableau</button>
+</div>
+
+<div id="colorModal" class="modal">
+    <p id="paletteTitle" style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom:15px;"></p>
+    <div class="palette-grid" id="paletteGrid"></div>
+</div>
+
+<div id="paperModal" class="modal">
+    <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">Style du Papier</p>
+    <div class="paper-opt" onclick="setPaper('paper-uni')">Uni Minimaliste</div>
+    <div class="paper-opt paper-grid" onclick="setPaper('paper-grid')">Petit Carreaux</div>
+    <div class="paper-opt paper-lines" onclick="setPaper('paper-lines')">Ligné Classique</div>
+</div>
+
+<div id="book-wrapper">
+    <div id="cover" onclick="openBook()">
+        <div style="font-family: 'Playfair Display', serif; font-size: 40px; letter-spacing: 4px; margin-top: 10vh; text-align:center;">Suivi de candidature</div>
+        <div class="user-info" onclick="event.stopPropagation()">
+            <input type="text" id="userName" placeholder="PRÉNOM ET NOM" style="border-bottom: 1px solid #000; text-align: center; font-size: 16px; width: 280px; background: transparent; border-top:none; border-left:none; border-right:none; border-radius:0;">
+        </div>
+        <div class="turn-page-hint">Tourner la page →</div>
+        <div style="font-size: 26px; letter-spacing: 8px; font-weight: 300;">SŌMA</div>
+    </div>
+
+    <div id="main-content">
+        <div class="top-menu">
+            <button onclick="closeBook()" style="background:none; border:1px solid #000; padding:8px 18px; cursor:pointer; font-size:10px; text-transform:uppercase; border-radius:25px; font-weight:bold;">Refermer</button>
+            <div class="tools-right">
+                <div style="cursor:pointer; text-align:center" onclick="openModal('paperModal')">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    <div style="font-size:8px; font-weight:bold">PAPIER</div>
+                </div>
+                <div style="cursor:pointer; text-align:center" onclick="openModal('zoneModal')">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.5"><path d="M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path></svg>
+                    <div style="font-size:8px; font-weight:bold">COULEURS</div>
+                </div>
+            </div>
+        </div>
+
+        <h1 class="registre-title">Registre de Prospection</h1>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Établissement</th>
+                        <th>Adresse / Ville</th>
+                        <th>Date d'envoi</th>
+                        <th>Relance (J+10)</th>
+                        <th>Réponse</th>
+                        <th>Rappel</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        <button onclick="addRow()" style="margin-top:20px; padding:12px 25px; background:#000; color:#fff; border:none; border-radius:30px; cursor:pointer; font-size:10px; text-transform:uppercase; font-weight:bold;">+ Nouvelle Ligne</button>
+        <div class="copyright">Copyright Sōma © 2024</div>
+    </div>
+</div>
+
+<script>
+    const pastelColors = ["#E1E3E3", "#DFD8D5", "#D8D5D2", "#E6D4C4", "#BAB1B0", "#898684", "#F2F8F8", "#C3CED1", "#B1A6A6", "#B0AEB4", "#A2A09A", "#6F6869", "#E8E7E7", "#EEE9E9", "#D5C7B3", "#E2D7D4", "#B0A19F", "#C09D89", "#D0CFCD", "#E9F0F0", "#E4DDD4", "#B1B6AF", "#D7D8D2", "#B6AD9E", "#DFE5E5", "#E4E9EC", "#B8BFBA", "#8F877F", "#859A9E", "#BDD2E0", "#F8FCFD", "#E9EDEE", "#CFCFD4", "#E2DFD7", "#E2D5D5", "#DED0C7", "#F6F2F0", "#D4C1BA", "#D0C9CB", "#C1B2B1"];
+    let candidatures = JSON.parse(localStorage.getItem('soma_v13')) || [];
+    let currentZone = '';
+
+    function openBook() { document.getElementById('cover').classList.add('opened'); document.getElementById('main-content').classList.add('visible'); }
+    function closeBook() { document.getElementById('cover').classList.remove('opened'); document.getElementById('main-content').classList.remove('visible'); }
+    function openModal(id) { document.getElementById(id).style.display = 'block'; document.getElementById('overlay').style.display = 'block'; }
+    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); document.getElementById('overlay').style.display = 'none'; }
+
+    function openPalette(zone) {
+        currentZone = zone;
+        document.getElementById('zoneModal').style.display = 'none';
+        document.getElementById('paletteTitle').innerText = "Couleur : " + zone;
+        document.getElementById('colorModal').style.display = 'block';
+    }
+
+    const grid = document.getElementById('paletteGrid');
+    pastelColors.forEach(color => {
+        const dot = document.createElement('div');
+        dot.className = 'color-dot'; dot.style.background = color;
+        dot.onclick = () => {
+            document.documentElement.style.setProperty('--'+currentZone+(currentZone==='header'?'-table':'')+'-bg', color);
+            localStorage.setItem('soma_'+currentZone, color);
+            closeModals();
+        };
+        grid.appendChild(dot);
+    });
+
+    function setPaper(s) { 
+        document.getElementById('main-content').classList.remove('paper-uni', 'paper-grid', 'paper-lines');
+        document.getElementById('main-content').classList.add(s); 
+        localStorage.setItem('soma_paper', s); 
+        closeModals(); 
+    }
+
+    function addRow() { candidatures.push({ id: Date.now(), nom: "", lieu: "", date: "", reponse: "Attente" }); render(); }
+
+    function render() {
+        const body = document.getElementById('tableBody'); body.innerHTML = "";
+        candidatures.forEach((c, i) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" value="${c.nom}" oninput="u(${i},'nom',this.value)"></td>
+                <td><input type="text" value="${c.lieu}" oninput="u(${i},'lieu',this.value)"></td>
+                <td><input type="date" value="${c.date}" onchange="u(${i},'date',this.value)"></td>
+                <td style="font-size:12px; font-weight:bold">${calc(c.date)}</td>
+                <td>
+                    <select onchange="u(${i},'reponse',this.value)">
+                        <option value="Attente" ${c.reponse==='Attente'?'selected':''}>Attente</option>
+                        <option value="Oui" ${c.reponse==='Oui'?'selected':''}>OUI</option>
+                        <option value="Non" ${c.reponse==='Non'?'selected':''}>NON</option>
+                    </select>
+                </td>
+                <td><button class="btn-cal" onclick="addToCalendar(${i})">🔔 CALENDRIER</button></td>
+            `;
+            body.appendChild(row);
+        });
+    }
+
+    function u(i,k,v) { candidatures[i][k]=v; localStorage.setItem('soma_v13', JSON.stringify(candidatures)); if(k==='date') render(); }
+    function calc(d) { if(!d) return "-"; let date = new Date(d); date.setDate(date.getDate()+10); return date.toLocaleDateString('fr-FR'); }
+
+    function addToCalendar(i) {
+        const c = candidatures[i];
+        if(!c.date) return alert("Saisissez une date.");
+        let dateRelance = new Date(c.date);
+        dateRelance.setDate(dateRelance.getDate() + 10);
+        const format = (d) => d.toISOString().replace(/-|:|\.\d+/g, "");
+        const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:${format(dateRelance)}\nDTEND:${format(dateRelance)}\nSUMMARY:Relance Stage: ${c.nom}\nDESCRIPTION:Relance pour ${c.nom}\nEND:VEVENT\nEND:VCALENDAR`;
+        const blob = new Blob([ics], { type: 'text/calendar' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `relance.ics`;
+        link.click();
+    }
+
+    // Init
+    ['cover','page','header'].forEach(z => {
+        const s = localStorage.getItem('soma_'+z);
+        if(s) document.documentElement.style.setProperty('--'+z+(z==='header'?'-table':'')+'-bg', s);
+    });
+    const sp = localStorage.getItem('soma_paper'); if(sp) setPaper(sp);
+    render();
+</script>
+</body>
+</html>
