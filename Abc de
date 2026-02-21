@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sōma Book - Ultimate Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --cover-bg: #E1E3E3; --page-color: #ffffff; --review-text: #5a4d44; }
+
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            font-family: 'Inter', sans-serif; background-color: #f0f0f0; 
+            overflow: hidden; display: flex; justify-content: center; align-items: center;
+            perspective: 2000px;
+        }
+
+        .grain { position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.04; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+
+        #book-wrapper { 
+            width: 100vw; height: 100vh; background: var(--page-color); 
+            position: relative; overflow: hidden; 
+            transform-style: preserve-3d;
+        }
+        
+        #cover { 
+            position: absolute; inset: 0; background-color: var(--cover-bg); 
+            z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: space-between; 
+            padding: 8% 20px; transition: transform 1s cubic-bezier(0.645, 0.045, 0.355, 1);
+            cursor: pointer; background-size: cover; background-position: center;
+            transform-origin: left;
+        }
+        #cover.opened { transform: rotateY(-110deg); opacity: 0; pointer-events: none; }
+        
+        .notif-area { width: 90%; max-width: 350px; z-index: 1100; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); pointer-events: none; }
+
+        .imessage-notif { 
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(15px); 
+            border-radius: 14px; padding: 12px; margin-bottom: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 0.5px solid rgba(255,255,255,0.4);
+            pointer-events: auto; cursor: pointer; animation: slideIn 0.5s ease;
+        }
+        .imessage-header { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #666; margin-bottom: 4px; text-transform: uppercase; }
+        .imessage-body { font-size: 12px; color: #000; line-height: 1.3; }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* VELIN SYSTEM */
+        .velin-container {
+            position: absolute; inset: 0; z-index: 500;
+            background: none; transition: transform 1s ease, opacity 0.5s;
+            transform-origin: left; cursor: pointer;
+        }
+        .velin-container.lifted { transform: rotateY(-110deg); opacity: 0; pointer-events: none; }
+        .velin-image { width: 100%; height: 100%; object-fit: cover; mix-blend-mode: multiply; pointer-events: none; }
+        .velin-controls { position: absolute; top: 25px; left: 25px; z-index: 501; display: flex; gap: 10px; background: white; padding: 8px; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .velin-delete { color: #e74c3c; cursor: pointer; font-weight: bold; padding: 0 5px; }
+
+        /* STICKERS */
+        .sticker-wrapper { position: absolute; cursor: move; user-select: none; z-index: 10; touch-action: none; display: inline-block; line-height: 0; padding: 5px; }
+        .sticker-wrapper img { width: 100%; height: auto; pointer-events: none; mix-blend-mode: multiply; }
+        .stk-ctrl { position: absolute; top: -10px; right: -10px; display: flex; gap: 5px; opacity: 0; transition: 0.3s; }
+        .sticker-wrapper:hover .stk-ctrl { opacity: 1; }
+        .stk-btn { background: white; border: 1px solid #ccc; border-radius: 50%; width: 22px; height: 22px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .stk-del { color: #e74c3c; border-color: #e74c3c; }
+
+        /* TABS & PAGES */
+        #tabs-container { position: absolute; right: 0; top: 60px; display: flex; flex-direction: column; gap: 2px; z-index: 2; }
+        .tab { width: 45px; height: 50px; border-radius: 8px 0 0 8px; cursor: pointer; transition: 0.4s; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; box-shadow: -2px 2px 5px rgba(0,0,0,0.1); }
+
+        #pages-slider { width: 100%; height: 100%; display: flex; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+        .page-surface { min-width: 100vw; height: 100vh; box-sizing: border-box; padding: 80px 5% 40px 5%; position: relative; outline: none; overflow-y: auto; background-color: #fff; }
+
+        .nav-zone { position: absolute; top: 0; bottom: 0; width: 60px; display: flex; align-items: center; justify-content: center; z-index: 100; cursor: pointer; opacity: 0.1; }
+        .nav-next { right: 0; } .nav-prev { left: 0; }
+
+        .toolbar-top { position: absolute; top: 25px; right: 60px; display: flex; gap: 20px; z-index: 1100; }
+        .tool-icon { cursor: pointer; opacity: 0.6; }
+        .tool-icon svg { width: 22px; height: 22px; stroke: #333; }
+
+        /* REVIEW COMPLÈTE - DESIGN FIDÈLE */
+        .review-container { 
+            max-width: 850px; margin: 0 auto; background: #fff; padding: 20px; color: #5a4d44;
+            display: grid; grid-template-columns: 220px 1fr; gap: 25px;
+        }
+        .rev-left-col { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .rev-cover-placeholder { width: 180px; height: 260px; border: 1px solid #ddd; background: #fdfaf6; display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; }
+        
+        .rev-main-form { display: flex; flex-direction: column; gap: 10px; }
+        .rev-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .rev-input-group { border-bottom: 1px solid #dcd0c0; padding: 5px 0; display: flex; flex-direction: column; }
+        .rev-input-group.full { grid-column: span 2; }
+        .rev-label-sm { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: #a09080; }
+        .rev-input-field { border: none; outline: none; background: transparent; font-family: 'Inter'; font-size: 13px; padding: 4px 0; width: 100%; }
+        
+        .rev-checkbox-group { display: flex; gap: 15px; margin: 10px 0; font-size: 11px; font-weight: 600; }
+        .rev-checkbox-group label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+
+        .rev-sections-grid { grid-column: span 2; display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-top: 10px; }
+        .rev-box { border: 1px solid #dcd0c0; padding: 15px; position: relative; min-height: 150px; }
+        .rev-box-title { position: absolute; top: -8px; left: 15px; background: white; padding: 0 10px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .rev-content-area { font-size: 13px; line-height: 1.6; outline: none; height: 100%; }
+
+        .rev-rating-stars { display: flex; flex-direction: column; gap: 8px; font-size: 12px; }
+        .star-line { display: flex; justify-content: space-between; align-items: center; }
+        .stars-clickable { cursor: pointer; color: #dcd0c0; font-size: 16px; }
+
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 20px; z-index: 10001; width: 320px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.1); z-index: 10000; backdrop-filter: blur(2px); }
+        .btn-opt { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid #eee; background: #fff; border-radius: 10px; cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+    <div id="overlay" onclick="closeModals()"></div>
+
+    <div id="book-wrapper">
+        <div id="page-notif-area" class="notif-area"></div>
+        <div class="toolbar-top">
+            <div class="tool-icon" onclick="openModal('reviewPopup')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+            <div class="tool-icon" onclick="document.getElementById('stickerUpload').click()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg></div>
+            <div class="tool-icon" onclick="document.getElementById('velinUpload').click()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M5 19V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14l-5-3-5 3z" stroke-dasharray="2 2"/></svg></div>
+            <div class="tool-icon" onclick="openModal('paperModal')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg></div>
+        </div>
+
+        <div id="tabs-container"></div>
+        <div id="cover" onclick="openBook()">
+            <div id="cover-notif-area" class="notif-area" onclick="event.stopPropagation()"></div>
+            <div style="font-family: 'Playfair Display', serif; font-size: 60px;">Sōma Book</div>
+            <input type="text" id="userName" placeholder="PRÉNOM ET NOM" style="border:none; border-bottom:2px solid #000; text-align: center; font-size: 18px; width: 300px; background: transparent; outline:none;" onclick="event.stopPropagation()">
+            <div style="font-size: 32px; letter-spacing: 15px;">SŌMA</div>
+        </div>
+
+        <div class="nav-zone nav-prev" onclick="prevPage()"></div>
+        <div class="nav-zone nav-next" onclick="nextPage()"></div>
+        <div id="pages-slider"></div>
+    </div>
+
+    <div id="reviewPopup" class="modal"><button class="btn-opt" onclick="insertReviewWidget()">AJOUTER PAGE DE REVUE</button></div>
+    <div id="paperModal" class="modal"><button class="btn-opt" onclick="changePaper('paper-blank')">Vierge</button><button class="btn-opt" onclick="changePaper('paper-lined')">Ligné</button></div>
+
+    <input type="file" id="revImgUpload" hidden onchange="handleRevImage(this)">
+    <input type="file" id="stickerUpload" hidden onchange="handleSticker(this)">
+    <input type="file" id="velinUpload" hidden onchange="handleVelin(this)">
+
+    <script>
+        let tabsData = JSON.parse(localStorage.getItem('soma_v8')) || [{ color: "#E1E3E3", content: "", paper: "paper-lined", paperColor: "#ffffff", velin: null }];
+        let currentIdx = 0, lastRevBox = null, dismissedNotifs = [];
+
+        function openBook() { document.getElementById('cover').classList.add('opened'); initBook(); }
+        function initBook() { renderPages(); updateNavigation(); }
+
+        function renderPages() {
+            const slider = document.getElementById('pages-slider');
+            slider.innerHTML = "";
+            tabsData.forEach((page, i) => {
+                const div = document.createElement('div');
+                div.className = `page-surface ${page.paper}`;
+                div.style.backgroundColor = page.paperColor || "#ffffff";
+                div.contentEditable = true;
+                div.innerHTML = page.content;
+                
+                if(page.velin) {
+                    const v = document.createElement('div');
+                    v.className = "velin-container";
+                    v.id = "v_" + i;
+                    v.innerHTML = `<div class="velin-controls" onclick="event.stopPropagation()"><span class="velin-delete" onclick="removeVelin(${i})">×</span><input type="range" min="0" max="1" step="0.1" value="${page.velin.op}" oninput="updateVelinOp(${i}, this.value)"></div><img src="${page.velin.src}" class="velin-image" style="opacity:${page.velin.op}">`;
+                    v.onclick = () => v.classList.toggle('lifted');
+                    div.appendChild(v);
+                }
+
+                div.oninput = () => { save(); refreshGlobalNotifs(); };
+                slider.appendChild(div);
+                initStickers(div);
+            });
+            renderTabs();
+            refreshGlobalNotifs();
+        }
+
+        function insertReviewWidget() {
+            const widget = `
+            <div class="review-container" contenteditable="false">
+                <div class="rev-left-col">
+                    <div class="rev-cover-placeholder" onclick="triggerRevImg(this)">PHOTO COUVERTURE</div>
+                    <div class="rev-rating-stars" style="font-size: 20px; color: #f1c40f;" onclick="setStars(event, this)">☆☆☆☆☆</div>
+                </div>
+                <div class="rev-main-form">
+                    <div class="rev-input-group full"><span class="rev-label-sm">Titre</span><input class="rev-input-field b-title" type="text" oninput="this.setAttribute('value', this.value); save(); refreshGlobalNotifs()"></div>
+                    <div class="rev-row">
+                        <div class="rev-input-group"><span class="rev-label-sm">Auteur</span><input class="rev-input-field" type="text" oninput="this.setAttribute('value', this.value); save();"></div>
+                        <div class="rev-input-group"><span class="rev-label-sm">Genre</span><input class="rev-input-field" type="text" oninput="this.setAttribute('value', this.value); save();"></div>
+                    </div>
+                    <div class="rev-row">
+                        <div class="rev-input-group"><span class="rev-label-sm">Date de publication</span><input class="rev-input-field" type="text" oninput="this.setAttribute('value', this.value); save();"></div>
+                        <div class="rev-input-group"><span class="rev-label-sm">Nombre de pages</span><input class="rev-input-field total-pg" type="number" oninput="this.setAttribute('value', this.value); save(); refreshGlobalNotifs()"></div>
+                    </div>
+                    <div class="rev-row">
+                        <div class="rev-input-group"><span class="rev-label-sm">Date de début</span><input class="rev-input-field" type="date" oninput="this.setAttribute('value', this.value); save();"></div>
+                        <div class="rev-input-group"><span class="rev-label-sm">Date de fin</span><input class="rev-input-field date-end" type="date" oninput="this.setAttribute('value', this.value); save(); refreshGlobalNotifs()"></div>
+                    </div>
+                    <div class="rev-input-group full"><span class="rev-label-sm">Recommandé par</span><input class="rev-input-field" type="text" oninput="this.setAttribute('value', this.value); save();"></div>
+                    <div class="rev-input-group full"><span class="rev-label-sm">Pages Lues (pour rappel)</span><input class="rev-input-field read-pg" type="number" oninput="this.setAttribute('value', this.value); save(); refreshGlobalNotifs()"></div>
+                    <div class="rev-checkbox-group">
+                        <label><input type="checkbox" onchange="this.hasAttribute('checked')?this.removeAttribute('checked'):this.setAttribute('checked','checked'); save();"> Livre</label>
+                        <label><input type="checkbox" onchange="this.hasAttribute('checked')?this.removeAttribute('checked'):this.setAttribute('checked','checked'); save();"> E-Book</label>
+                        <label><input type="checkbox" onchange="this.hasAttribute('checked')?this.removeAttribute('checked'):this.setAttribute('checked','checked'); save();"> Audiobook</label>
+                    </div>
+                </div>
+                <div class="rev-sections-grid">
+                    <div class="rev-box">
+                        <span class="rev-box-title">Résumé & Avis</span>
+                        <div class="rev-content-area" contenteditable="true" oninput="save()">...</div>
+                    </div>
+                    <div class="rev-box">
+                        <span class="rev-box-title">Citation</span>
+                        <div class="rev-content-area" contenteditable="true" oninput="save()">"..."</div>
+                    </div>
+                    <div class="rev-box">
+                        <span class="rev-box-title">Évaluation</span>
+                        <div class="rev-rating-stars">
+                            <div class="star-line"><span>Lisibilité</span><span class="stars-clickable" onclick="setStars(event, this)">☆☆☆☆☆</span></div>
+                            <div class="star-line"><span>Style</span><span class="stars-clickable" onclick="setStars(event, this)">☆☆☆☆☆</span></div>
+                            <div class="star-line"><span>Contenu</span><span class="stars-clickable" onclick="setStars(event, this)">☆☆☆☆☆</span></div>
+                            <div class="star-line"><span>Personnages</span><span class="stars-clickable" onclick="setStars(event, this)">☆☆☆☆☆</span></div>
+                        </div>
+                    </div>
+                    <div class="rev-box">
+                        <span class="rev-box-title">Mood</span>
+                        <div class="rev-content-area" contenteditable="true" oninput="save()">😊 / 😐 / ☹️</div>
+                    </div>
+                </div>
+            </div><br>`;
+            const currentSurface = document.querySelectorAll('.page-surface')[currentIdx];
+            currentSurface.innerHTML += widget;
+            save(); closeModals();
+        }
+
+        function setStars(e, el) {
+            const rect = el.getBoundingClientRect();
+            const count = Math.ceil((e.clientX - rect.left) / rect.width * 5);
+            el.innerHTML = `<span style="color:#f1c40f">${'★'.repeat(count)}</span>${'☆'.repeat(5-count)}`;
+            save();
+        }
+
+        function refreshGlobalNotifs() {
+            const cards = document.querySelectorAll('.review-container');
+            const areas = [document.getElementById('cover-notif-area'), document.getElementById('page-notif-area')];
+            areas.forEach(a => a.innerHTML = "");
+            cards.forEach((card, cardIdx) => {
+                if (dismissedNotifs.includes(cardIdx)) return;
+                const title = (card.querySelector('.b-title').value || card.querySelector('.b-title').getAttribute('value') || "").trim();
+                const total = parseInt(card.querySelector('.total-pg').value || card.querySelector('.total-pg').getAttribute('value'));
+                const read = parseInt(card.querySelector('.read-pg').value || card.querySelector('.read-pg').getAttribute('value'));
+                const endStr = card.querySelector('.date-end').value || card.querySelector('.date-end').getAttribute('value');
+                
+                if (title && !isNaN(total) && endStr && !isNaN(read) && read < total) {
+                    const today = new Date();
+                    const endDate = new Date(endStr);
+                    const diffDays = Math.max(1, Math.ceil((endDate - today) / (1000 * 60 * 60 * 24)));
+                    const perDay = Math.ceil((total - read) / diffDays);
+                    let msg = `Il reste ${total - read} p. pour "${title}". Lis en ${perDay}/jour !`;
+                    areas.forEach(area => {
+                        const notif = document.createElement('div');
+                        notif.className = "imessage-notif";
+                        notif.innerHTML = `<div class="imessage-header"><span>SŌMA BOOK</span><span>maintenant</span></div><div class="imessage-body">${msg}</div>`;
+                        notif.onclick = (e) => { e.stopPropagation(); dismissedNotifs.push(cardIdx); refreshGlobalNotifs(); };
+                        area.appendChild(notif);
+                    });
+                }
+            });
+        }
+
+        function save() { 
+            const surfaces = document.querySelectorAll('.page-surface');
+            if(surfaces[currentIdx]) {
+                const clone = surfaces[currentIdx].cloneNode(true);
+                const v = clone.querySelector('.velin-container');
+                if(v) v.remove();
+                tabsData[currentIdx].content = clone.innerHTML;
+            }
+            localStorage.setItem('soma_v8', JSON.stringify(tabsData)); 
+        }
+
+        function handleVelin(input) {
+            if (input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    tabsData[currentIdx].velin = { src: e.target.result, op: 0.5 };
+                    save(); renderPages();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function updateVelinOp(idx, val) {
+            tabsData[idx].velin.op = val;
+            save();
+            const img = document.querySelector(`#v_${idx} .velin-image`);
+            if(img) img.style.opacity = val;
+        }
+
+        function removeVelin(idx) {
+            tabsData[idx].velin = null;
+            save(); renderPages();
+        }
+
+        function updateNavigation() { document.getElementById('pages-slider').style.transform = `translateX(-${currentIdx * 100}vw)`; }
+        function nextPage() { save(); if (currentIdx < tabsData.length - 1) currentIdx++; else { tabsData.push({ color: "#E1E3E3", content: "", paper: "paper-lined", paperColor: "#ffffff", velin: null }); renderPages(); currentIdx++; } updateNavigation(); }
+        function prevPage() { save(); if (currentIdx > 0) { currentIdx--; updateNavigation(); } else document.getElementById('cover').classList.remove('opened'); }
+        function goToPage(i) { save(); currentIdx = i; updateNavigation(); }
+        function renderTabs() {
+            const container = document.getElementById('tabs-container'); container.innerHTML = "";
+            tabsData.forEach((t, i) => {
+                const el = document.createElement("div"); el.className = "tab"; el.style.background = t.color; el.textContent = i + 1; el.onclick = () => goToPage(i); container.appendChild(el);
+            });
+        }
+
+        function handleSticker(input) {
+            if (input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const id = 'stk_' + Date.now();
+                    const wrap = `<div id="${id}" class="sticker-wrapper" style="top:150px; left:150px; width:120px;" contenteditable="false">
+                        <div class="stk-ctrl"><div class="stk-btn stk-del" onclick="document.getElementById('${id}').remove(); save();">×</div></div>
+                        <img src="${e.target.result}">
+                    </div>`;
+                    document.querySelectorAll('.page-surface')[currentIdx].innerHTML += wrap;
+                    save(); initStickers(document.querySelectorAll('.page-surface')[currentIdx]);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function initStickers(container) {
+            container.querySelectorAll('.sticker-wrapper').forEach(el => {
+                el.onpointerdown = (e) => {
+                    if(e.target.classList.contains('stk-btn')) return;
+                    let sX = e.clientX - el.offsetLeft, sY = e.clientY - el.offsetTop;
+                    document.onpointermove = (ev) => { el.style.left = (ev.clientX - sX) + 'px'; el.style.top = (ev.clientY - sY) + 'px'; };
+                    document.onpointerup = () => { document.onpointermove = null; save(); };
+                };
+            });
+        }
+
+        function triggerRevImg(el) { lastRevBox = el; document.getElementById('revImgUpload').click(); }
+        function handleRevImage(i) { if (i.files[0]) { const r = new FileReader(); r.onload = e => { lastRevBox.style.backgroundImage = `url(${e.target.result})`; lastRevBox.textContent = ""; save(); }; r.readAsDataURL(i.files[0]); } }
+        function changePaper(s) { tabsData[currentIdx].paper = s; renderPages(); save(); closeModals(); }
+        function openModal(id) { document.getElementById(id).style.display='block'; document.getElementById('overlay').style.display='block'; }
+        function closeModals() { document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); document.getElementById('overlay').style.display='none'; }
+
+        window.onload = () => { initBook(); };
+    </script>
+</body>
+</html>
