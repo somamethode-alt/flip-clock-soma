@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sōma Book - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --cover-bg: #E1E3E3; 
+            --page-bg: #FDFBF7; 
+            --header-table-bg: #E1E3E3; 
+            --stat-lus-bg: #ffffff; 
+            --stat-cours-bg: #ffffff; 
+            --stat-pal-bg: #ffffff; 
+        }
+
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background-color: #f0f0f0; overflow-x: hidden; }
+        
+        /* Textures de papier */
+        .paper-grid { background-image: radial-gradient(rgba(0,0,0,0.08) 0.8px, transparent 0.8px); background-size: 20px 20px; }
+        .paper-lines { background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px); background-size: 100% 30px; }
+        
+        .grain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; opacity: 0.04; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+
+        /* Navigation Latérale (Photo 3) */
+        #side-nav { position: fixed; right: -50px; top: 100px; display: flex; flex-direction: column; gap: 4px; z-index: 2000; transition: right 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        #side-nav.show { right: 0; }
+        .tab { width: 45px; height: 65px; border-radius: 8px 0 0 8px; cursor: pointer; transition: 0.3s; box-shadow: -2px 2px 10px rgba(0,0,0,0.05); }
+        .tab:hover { width: 55px; }
+
+        /* Couverture */
+        #cover { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--cover-bg); background-size: cover; background-position: center; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 80px 20px; box-sizing: border-box; transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: left center; box-shadow: inset -5px 0 10px rgba(0,0,0,0.1), 10px 0 30px rgba(0,0,0,0.2); cursor: pointer; }
+        #cover.opened { transform: rotateY(-115deg); pointer-events: none; }
+        .turn-page-hint { position: absolute; right: 25px; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; text-transform: uppercase; font-size: 10px; letter-spacing: 3px; opacity: 0.5; font-weight: 600; }
+
+        /* Contenu */
+        #main-content { padding: 40px 20px; min-height: 100vh; background-color: var(--page-bg); opacity: 0; transition: opacity 0.5s; }
+        .visible { opacity: 1 !important; }
+
+        /* Barre d'outils (Haut Droite Photo 2) */
+        .tools-right { display: flex; gap: 12px; align-items: center; }
+        .tool-btn { cursor: pointer; text-align: center; opacity: 0.7; transition: 0.3s; }
+        .tool-btn:hover { opacity: 1; }
+        .tool-btn span { display: block; font-size: 8px; font-weight: bold; margin-top: 2px; text-transform: uppercase; }
+
+        /* Table & Stats */
+        .stats-container { display: flex; gap: 15px; margin-bottom: 30px; }
+        .stat-card { flex: 1; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); background-size: cover; background-position: center; transition: 0.3s; }
+        .stat-card span { display: block; font-size: 28px; font-weight: bold; margin-bottom: 5px; }
+        .stat-card label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; opacity: 0.6; }
+
+        /* Modals */
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 20px; z-index: 10001; width: 340px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); z-index: 10000; backdrop-filter: blur(2px); }
+        .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 15px; }
+        .color-dot { width: 100%; aspect-ratio: 1; border-radius: 8px; cursor: pointer; border: 1px solid #eee; }
+        .paper-opt { padding: 15px; border: 1px solid #eee; margin-bottom: 8px; border-radius: 10px; cursor: pointer; text-align: center; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+
+        .table-container { background: rgba(255,255,255,0.4); border-radius: 15px; overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 950px; }
+        th { padding: 18px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 2px solid rgba(0,0,0,0.05); }
+        td { padding: 15px; border-bottom: 1px solid rgba(0,0,0,0.03); }
+        input[type="text"], select { border: 1px solid rgba(0,0,0,0.05); background: white; padding: 10px; border-radius: 6px; width: 90%; font-family: inherit; font-size: 13px; }
+    </style>
+</head>
+<body class="paper-uni">
+    <div class="grain"></div>
+    <div id="overlay" onclick="closeModals()"></div>
+
+    <div id="side-nav">
+        <div class="tab" style="background: #E8B1B1;" onclick="location.reload()"></div>
+        <div class="tab" style="background: #F2C38D;"></div>
+        <div class="tab" style="background: #F2EB8D;"></div>
+        <div class="tab" style="background: #BAF28D;"></div>
+        <div class="tab" style="background: #8DBAF2;"></div>
+        <div class="tab" style="background: #C5B1E8;"></div>
+    </div>
+
+    <div id="zoneModal" class="modal">
+        <p style="font-size: 10px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">Couleurs & Zones</p>
+        <button onclick="openPalette('cover')" style="width:100%; padding:12px; margin-bottom:8px; cursor:pointer;">Couleur Couverture</button>
+        <button onclick="openPalette('page')" style="width:100%; padding:12px; margin-bottom:8px; cursor:pointer;">Couleur Pages</button>
+        <div style="display:flex; gap:5px;">
+            <button onclick="openPalette('stat-lus')" style="flex:1; padding:10px; font-size:9px;">Lus</button>
+            <button onclick="openPalette('stat-cours')" style="flex:1; padding:10px; font-size:9px;">Cours</button>
+            <button onclick="openPalette('stat-pal')" style="flex:1; padding:10px; font-size:9px;">PAL</button>
+        </div>
+    </div>
+
+    <div id="paletteModal" class="modal">
+        <p id="paletteTitle" style="font-size: 10px; text-transform: uppercase; font-weight: bold;"></p>
+        <div class="palette-grid" id="paletteGrid"></div>
+    </div>
+
+    <div id="paperModal" class="modal">
+        <p style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Type de Papier</p>
+        <div class="paper-opt" onclick="setPaper('paper-uni')">Uni Minimaliste</div>
+        <div class="paper-opt paper-grid" onclick="setPaper('paper-grid')">Grille Bullet</div>
+        <div class="paper-opt paper-lines" onclick="setPaper('paper-lines')">Ligné Journal</div>
+    </div>
+
+    <div id="book-wrapper">
+        <div id="cover" onclick="openBook()">
+            <div style="font-family: 'Playfair Display', serif; font-size: 42px; letter-spacing: 3px; margin-top: 10vh; text-align:center;">Sōma Book</div>
+            <div onclick="event.stopPropagation()">
+                <input type="text" id="userName" oninput="saveUser()" placeholder="NOM DE L'AUTEUR" style="border:none; border-bottom:1.5px solid #000; text-align: center; font-size: 14px; width: 250px; background: transparent; letter-spacing: 3px; text-transform: uppercase;">
+            </div>
+            <div class="turn-page-hint">Tourner la page →</div>
+            <div style="font-size: 26px; letter-spacing: 10px; font-weight: 300;">SŌMA</div>
+        </div>
+
+        <div id="main-content">
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+                <button onclick="closeBook()" style="background:none; border:1px solid #000; padding:10px 22px; cursor:pointer; font-size:10px; text-transform:uppercase; border-radius:30px; font-weight:bold;">Refermer le livre</button>
+                
+                <div class="tools-right">
+                    <input type="file" id="coverImg" style="display:none" onchange="setCoverImage(this)">
+                    <div class="tool-btn" onclick="document.getElementById('coverImg').click()">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <span>Image</span>
+                    </div>
+                    <div class="tool-btn" onclick="clearStatsBg()">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.5"><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        <span>Clear</span>
+                    </div>
+                    <div class="tool-btn" onclick="openModal('paperModal')">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <span>Papier</span>
+                    </div>
+                    <div class="tool-btn" onclick="resetAll()">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d63031" stroke-width="1.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        <span style="color:#d63031">Reset</span>
+                    </div>
+                    <div class="tool-btn" onclick="openModal('zoneModal')">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.5"><path d="M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+                        <span>Couleurs</span>
+                    </div>
+                </div>
+            </div>
+
+            <h1 style="font-family: 'Playfair Display', serif; font-size: 34px; font-style: italic; margin-bottom: 30px;">Registre de Lecture</h1>
+
+            <div class="stats-container">
+                <div id="card-lus" class="stat-card" style="background-color: var(--stat-lus-bg);">
+                    <span id="countLus">0</span><label>Livres Lus</label>
+                </div>
+                <div id="card-cours" class="stat-card" style="background-color: var(--stat-cours-bg);">
+                    <span id="countCours">0</span><label>En cours</label>
+                </div>
+                <div id="card-pal" class="stat-card" style="background-color: var(--stat-pal-bg);">
+                    <span id="countPAL">0</span><label>Dans la PAL</label>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Titre & Auteur</th>
+                            <th>Maison d'édition</th>
+                            <th>Date Réception</th>
+                            <th>Deadline Post</th>
+                            <th>Statut</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <button onclick="addRow()" style="margin-top:30px; padding:15px 30px; background:#000; color:#fff; border:none; border-radius:40px; cursor:pointer; font-size:11px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">+ Ajouter une lecture</button>
+            <div class="copyright">Sōma Book Edition © 2026</div>
+        </div>
+    </div>
+
+    <script>
+        let db = JSON.parse(localStorage.getItem('soma_book_db')) || [];
+        let activeZone = '';
+        const palette = ["#FDFBF7","#E1E3E3","#DFD8D5","#F28D8D","#F2C38D","#F2EB8D","#BAF28D","#8DBAF2","#C5B1E8","#3D2B1F","#A2A09A","#B1A6A6"];
+
+        function openBook() { 
+            document.getElementById('cover').classList.add('opened'); 
+            document.getElementById('main-content').classList.add('visible');
+            document.getElementById('side-nav').classList.add('show');
+        }
+        function closeBook() { 
+            document.getElementById('cover').classList.remove('opened'); 
+            document.getElementById('main-content').classList.remove('visible');
+            document.getElementById('side-nav').classList.remove('show');
+        }
+
+        function openModal(id) { document.getElementById(id).style.display='block'; document.getElementById('overlay').style.display='block'; }
+        function closeModals() { document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); document.getElementById('overlay').style.display='none'; }
+
+        function openPalette(zone) {
+            activeZone = zone;
+            document.getElementById('zoneModal').style.display='none';
+            document.getElementById('paletteTitle').innerText = "Couleur : " + zone;
+            const grid = document.getElementById('paletteGrid'); grid.innerHTML = '';
+            palette.forEach(c => {
+                const d = document.createElement('div');
+                d.className = 'color-dot'; d.style.background = c;
+                d.onclick = () => {
+                    document.documentElement.style.setProperty('--' + activeZone + '-bg', c);
+                    localStorage.setItem('soma_color_' + activeZone, c);
+                    closeModals();
+                };
+                grid.appendChild(d);
+            });
+            document.getElementById('paletteModal').style.display='block';
+        }
+
+        function setPaper(style) {
+            document.body.className = style;
+            localStorage.setItem('soma_paper_style', style);
+            closeModals();
+        }
+
+        function setCoverImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById('cover').style.backgroundImage = `url(${e.target.result})`;
+                    localStorage.setItem('soma_cover_img', e.target.result);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function clearStatsBg() {
+            document.querySelectorAll('.stat-card').forEach(c => c.style.backgroundImage = 'none');
+            localStorage.removeItem('soma_cover_img');
+            document.getElementById('cover').style.backgroundImage = 'none';
+        }
+
+        function addRow() {
+            db.push({titre:'', edition:'', recu:'', deadline:'', statut:'PAL'});
+            render();
+        }
+
+        function render() {
+            const body = document.getElementById('tableBody'); body.innerHTML = '';
+            db.forEach((item, i) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" value="${item.titre}" oninput="update(${i},'titre',this.value)" placeholder="Livre..."></td>
+                    <td><input type="text" value="${item.edition}" oninput="update(${i},'edition',this.value)" placeholder="Éditeur..."></td>
+                    <td><input type="date" value="${item.recu}" onchange="update(${i},'recu',this.value)"></td>
+                    <td><input type="date" value="${item.deadline}" onchange="update(${i},'deadline',this.value)"></td>
+                    <td><select onchange="update(${i},'statut',this.value,true)">
+                        <option value="PAL" ${item.statut==='PAL'?'selected':''}>PAL</option>
+                        <option value="COURS" ${item.statut==='COURS'?'selected':''}>EN COURS</option>
+                        <option value="LU" ${item.statut==='LU'?'selected':''}>LU</option>
+                    </select></td>
+                    <td><button onclick="removeRow(${i})" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">X</button></td>
+                `;
+                body.appendChild(row);
+            });
+            updateStats();
+        }
+
+        function update(i, k, v, refresh=false) {
+            db[i][k] = v;
+            localStorage.setItem('soma_book_db', JSON.stringify(db));
+            if(refresh) render(); else updateStats();
+        }
+
+        function removeRow(i) { db.splice(i, 1); render(); }
+
+        function updateStats() {
+            document.getElementById('countLus').innerText = db.filter(x => x.statut === 'LU').length;
+            document.getElementById('countCours').innerText = db.filter(x => x.statut === 'COURS').length;
+            document.getElementById('countPAL').innerText = db.filter(x => x.statut === 'PAL').length;
+        }
+
+        function saveUser() { localStorage.setItem('soma_book_user', document.getElementById('userName').value); }
+        function resetAll() { if(confirm("Tout effacer ?")) { localStorage.clear(); location.reload(); } }
+
+        // Chargement initial
+        window.onload = () => {
+            const user = localStorage.getItem('soma_book_user'); if(user) document.getElementById('userName').value = user;
+            const paper = localStorage.getItem('soma_paper_style'); if(paper) document.body.className = paper;
+            const img = localStorage.getItem('soma_cover_img'); if(img) document.getElementById('cover').style.backgroundImage = `url(${img})`;
+            ['cover','page','stat-lus','stat-cours','stat-pal'].forEach(z => {
+                const c = localStorage.getItem('soma_color_' + z);
+                if(c) document.documentElement.style.setProperty('--' + z + '-bg', c);
+            });
+            render();
+        };
+    </script>
+</body>
+</html>
