@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Allié BookTok - Ultimate Edition</title>
+    <style>
+        :root {
+            --wood: #5d4037;
+            --paper: #f4e4bc;
+            --dust-opacity: 0;
+            --plant-filter: saturate(1) brightness(1);
+            --gold: #d4af37;
+        }
+
+        body {
+            margin: 0; background: #1a110a;
+            display: flex; height: 100vh; overflow: hidden;
+            font-family: 'Georgia', serif;
+        }
+
+        /* --- FILTRE DE POUSSIÈRE --- */
+        #dust-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(200, 200, 200, var(--dust-opacity));
+            pointer-events: none; z-index: 9999; transition: 2s;
+        }
+
+        /* --- SECTION GAUCHE : BIBLIOTHÈQUE INTERACTIVE --- */
+        .shelf-view {
+            flex: 1.2; background: #fff; padding: 20px;
+            border-right: 15px solid var(--wood);
+            position: relative; display: flex; flex-direction: column;
+            background-image: radial-gradient(#ccc 1px, transparent 1px); background-size: 20px 20px;
+        }
+
+        .window {
+            width: 180px; height: 250px; background: #050510;
+            margin: 0 auto 30px; border: 8px solid var(--wood);
+            border-radius: 90px 90px 0 0; position: relative;
+            box-shadow: inset 0 0 40px rgba(255,255,255,0.1);
+        }
+
+        .stars { position: absolute; width: 100%; text-align: center; top: 30%; color: white; font-size: 12px; }
+
+        .shelf {
+            border-bottom: 12px solid var(--wood); min-height: 160px;
+            display: flex; align-items: flex-end; padding: 10px; position: relative; margin-bottom: 40px;
+        }
+
+        .plant {
+            position: absolute; width: 80px; bottom: 12px; right: 10px;
+            filter: var(--plant-filter); transition: 3s;
+        }
+
+        .book-spine {
+            width: 35px; height: 140px; background: white; border: 1px solid #ddd;
+            margin-right: 4px; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+
+        .book-spine img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- SECTION DROITE : LE GRIMOIRE (PAGES) --- */
+        .grimoire-container {
+            flex: 1; background: #2c1e14; display: flex; align-items: center; justify-content: center;
+        }
+
+        .grimoire {
+            width: 90%; height: 90%; background: var(--paper);
+            border-radius: 5px 30px 30px 5px; padding: 40px;
+            box-shadow: -15px 15px 40px rgba(0,0,0,0.6); position: relative;
+            overflow-y: auto; color: #3d2b1f;
+        }
+
+        .page-content { display: none; animation: flip 0.5s ease-out; }
+        .page-content.active { display: block; }
+
+        @keyframes flip { from { opacity: 0; transform: rotateY(-10deg); } to { opacity: 1; transform: rotateY(0); } }
+
+        /* --- UI ELEMENTS --- */
+        button {
+            background: var(--wood); color: white; border: none; padding: 10px 15px;
+            border-radius: 5px; cursor: pointer; font-family: 'Georgia'; margin: 5px 0;
+        }
+        .badge { background: #e74c3c; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.8em; }
+        .stats-box { background: rgba(0,0,0,0.05); padding: 15px; border-radius: 10px; margin: 10px 0; border: 1px solid #dcd1b3; }
+        
+        #video-preview { width: 100%; height: 150px; background: #000; border-radius: 10px; display: none; margin-top: 10px; }
+
+    </style>
+</head>
+<body>
+
+<div id="dust-layer"></div>
+
+<div class="shelf-view">
+    <div class="window"><div class="stars">✦ . ✦<br>🌙</div></div>
+    
+    <div class="shelf" id="shelf-1">
+        <img src="https://cdn-icons-png.flaticon.com/512/3571/3571710.png" class="plant" id="plant-1">
+        <div class="book-spine" onclick="triggerScan(this)"></div>
+        <div class="book-spine" onclick="triggerScan(this)"></div>
+        <div class="book-spine" onclick="triggerScan(this)"></div>
+    </div>
+
+    <div class="shelf" id="shelf-2">
+        <img src="https://cdn-icons-png.flaticon.com/512/3571/3571710.png" class="plant" id="plant-2" style="left:10px; transform: scaleX(-1);">
+        <div class="book-spine" onclick="triggerScan(this)"></div>
+        <div class="book-spine" onclick="triggerScan(this)"></div>
+    </div>
+</div>
+
+<div class="grimoire-container">
+    <div class="grimoire">
+        <div style="text-align: center; border-bottom: 1px solid #3d2b1f; padding-bottom: 10px; margin-bottom: 20px;">
+            <small onclick="showPage('p1')">🏠 Home</small> | 
+            <small onclick="showPage('p2')">📚 Bibliothèque</small> | 
+            <small onclick="showPage('p3')">⏱️ Studio</small> | 
+            <small onclick="showPage('p4')">📈 Business</small>
+        </div>
+
+        <div id="p1" class="page-content active">
+            <h2>Command Center</h2>
+            <div class="stats-box">
+                <span class="badge">URGENT</span> <b>L'Empire du Silence</b> : Deadline Post dans 2 jours !<br>
+                <progress value="70" max="100" style="width:100%"></progress>
+            </div>
+            <div class="stats-box">
+                <b>Engagement :</b> 88% de score d'influence.<br>
+                <small>+12% de nouveaux abonnés via TikTok.</small>
+            </div>
+            <button onclick="triggerScan()">📸 SCANNER UN NOUVEAU LIVRE</button>
+            <p><i>L'annuaire : Salon du Livre Paris (12-14 Mars)</i></p>
+        </div>
+
+        <div id="p2" class="page-content">
+            <h2>Réseaux & Production</h2>
+            <div id="book-details">Sélectionnez un livre sur l'étagère pour préparer le post.</div>
+            <hr>
+            <h3>Script Helper (IA)</h3>
+            <textarea style="width:100%; height:80px;" placeholder="L'IA suggère : Commencez par 'POV: Tu viens de finir le chapitre 32...'"></textarea>
+            <button onclick="publishTo('TikTok')">🎵 Publier sur TikTok</button>
+            <button onclick="publishTo('Instagram')">📸 Publier sur Instagram</button>
+            <div id="publish-status"></div>
+        </div>
+
+        <div id="p3" class="page-content">
+            <h2>Studio de Lecture</h2>
+            <div style="text-align:center; font-size: 3em;" id="timer">25:00</div>
+            <div style="text-align:center;">
+                <button onclick="startTimer()">Démarrer</button>
+                <button onclick="resetTimer()">Reset</button>
+            </div>
+            <div style="margin-top:30px; display:flex; justify-content: space-around;">
+                <button style="background:#e74c3c;" onclick="logReaction('❤️ Coup de Coeur')">❤️ Coup de Coeur</button>
+                <button style="background:#3498db;" onclick="logReaction('😲 Choc')">😲 Choc</button>
+            </div>
+            <ul id="reading-logs" style="font-size:0.8em; margin-top:20px;"></ul>
+        </div>
+
+        <div id="p4" class="page-content">
+            <h2>Business & Rentabilité</h2>
+            <div class="stats-box" style="border: 2px solid var(--gold);">
+                <b>VALEUR DE LA PAL : 450.00 €</b><br>
+                <small>Économisés grâce aux services de presse.</small>
+            </div>
+            <h3>Facturation</h3>
+            <table style="width:100%; font-size: 0.9em;">
+                <tr><td>Hachette (Post #1)</td><td>75€</td><td style="color:green">PAYÉ</td></tr>
+                <tr><td>Bragelonne (Pack)</td><td>120€</td><td style="color:orange">ATTENTE</td></tr>
+            </table>
+            <button style="width:100%; margin-top:20px; border: 1px solid var(--gold);">📄 GÉNÉRER MON KIT DE PRESSE DYNAMIQUE</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- GESTION DU TEMPS ET DE L'ENVIRONNEMENT (PLANTES/POUSSIÈRE) ---
+    function checkLifeSystem() {
+        const lastVisit = localStorage.getItem('lastBookVisit') || Date.now();
+        const diffDays = Math.floor((Date.now() - lastVisit) / (1000 * 60 * 60 * 24));
+        
+        let dust = diffDays * 0.08;
+        let health = 1 - (diffDays * 0.15);
+        
+        if(dust > 0.4) dust = 0.4;
+        if(health < 0.1) health = 0.1;
+
+        document.documentElement.style.setProperty('--dust-opacity', dust);
+        document.documentElement.style.setProperty('--plant-filter', `saturate(${health}) brightness(${health}) sepia(${1-health})`);
+        
+        localStorage.setItem('lastBookVisit', Date.now());
+    }
+
+    // --- NAVIGATION ---
+    function showPage(id) {
+        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    // --- SCAN ET RELIURE AUTOMATIQUE ---
+    let selectedSlot = null;
+    function triggerScan(el) {
+        if(el) selectedSlot = el;
+        const isbn = prompt("Entrez le code ISBN (ou simulez le scan) :");
+        if(isbn) {
+            // Simulation d'appel API Google Books
+            const bookTitle = "Le Nom du Vent";
+            const coverUrl = "https://m.media-amazon.com/images/I/91b0S2vA7WL.jpg";
+            
+            if(selectedSlot) {
+                selectedSlot.innerHTML = `<img src="${coverUrl}" title="${bookTitle}">`;
+                selectedSlot.classList.add('filled');
+                showPage('p2');
+                document.getElementById('book-details').innerHTML = `<b>Livre :</b> ${bookTitle}<br><b>Reçu le :</b> Aujourd'hui<br><b>Deadline :</b> Dans 14 jours.`;
+            }
+        }
+    }
+
+    // --- PUBLICATION ET BADGE ---
+    function publishTo(platform) {
+        const now = new Date().toLocaleString();
+        document.getElementById('publish-status').innerHTML = `<span class="badge" style="background:green">Publié sur ${platform} le ${now}</span>`;
+        if(selectedSlot) {
+            selectedSlot.style.border = "3px solid gold"; // Badge visuel sur l'étagère
+        }
+    }
+
+    // --- STUDIO : POMODORO ---
+    let timer;
+    let seconds = 1500;
+    function startTimer() {
+        clearInterval(timer);
+        timer = setInterval(() => {
+            seconds--;
+            let mins = Math.floor(seconds / 60);
+            let secs = seconds % 60;
+            document.getElementById('timer').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            if(seconds <= 0) clearInterval(timer);
+        }, 1000);
+    }
+    function resetTimer() { clearInterval(timer); seconds = 1500; document.getElementById('timer').innerText = "25:00"; }
+    
+    function logReaction(type) {
+        const li = document.createElement('li');
+        li.innerText = `[${new Date().toLocaleTimeString()}] ${type} - Page enregistrée.`;
+        document.getElementById('reading-logs').prepend(li);
+    }
+
+    window.onload = checkLifeSystem;
+</script>
+
+</body>
+</html>
