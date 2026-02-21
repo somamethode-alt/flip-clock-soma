@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Carnet à onglets interactif</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#f4f4f4;
+    display:flex;
+    height:100vh;
+}
+
+/* CONTENEUR */
+.app{
+    display:flex;
+    width:100%;
+}
+
+/* ZONE PAGES */
+.pages{
+    flex:1;
+    background:white;
+    padding:40px;
+    position:relative;
+    overflow:hidden;
+}
+
+/* ANIMATION PAGE */
+.page{
+    position:absolute;
+    inset:40px;
+    display:none;
+    padding:30px;
+    border-radius:8px;
+    transition:transform .4s ease, opacity .4s ease;
+}
+.page.active{
+    display:block;
+}
+
+/* STYLES PAPIER */
+
+/* 1 lignes */
+.paper-lined{
+    background:
+    repeating-linear-gradient(
+        white 0px,
+        white 26px,
+        #e3e3e3 27px
+    );
+}
+
+/* 2 quadrillage */
+.paper-grid{
+    background:
+    linear-gradient(#eee 1px, transparent 1px),
+    linear-gradient(90deg,#eee 1px, transparent 1px);
+    background-size:25px 25px;
+}
+
+/* 3 pointillé */
+.paper-dots{
+    background-image: radial-gradient(#bbb 1px, transparent 1px);
+    background-size:20px 20px;
+}
+
+/* 4 crème vintage */
+.paper-vintage{
+    background:#f6f1e7;
+}
+
+/* 5 technique */
+.paper-architect{
+    background:
+    linear-gradient(#dde7f0 1px, transparent 1px),
+    linear-gradient(90deg,#dde7f0 1px, transparent 1px);
+    background-size:30px 30px;
+}
+
+/* 6 blanc */
+.paper-blank{
+    background:white;
+}
+
+/* 7 planner */
+.paper-planner{
+    background:white;
+    border-left:4px solid #ddd;
+}
+
+/* 8 texture */
+.paper-texture{
+    background:
+    linear-gradient(135deg,#fafafa 25%,transparent 25%) -10px 0/20px 20px,
+    linear-gradient(225deg,#fafafa 25%,transparent 25%) -10px 0/20px 20px,
+    linear-gradient(315deg,#fafafa 25%,transparent 25%) 0 0/20px 20px,
+    linear-gradient(45deg,#fafafa 25%,#fff 25%) 0 0/20px 20px;
+}
+
+/* ONGLET */
+.tabs{
+    width:80px;
+    background:#eee;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:10px 0;
+    overflow:auto;
+}
+
+.tab{
+    width:60px;
+    height:40px;
+    margin:5px 0;
+    border-radius:6px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+}
+
+/* CONTROLES */
+.controls{
+    position:absolute;
+    top:10px;
+    left:10px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+button, select{
+    padding:6px 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <div class="pages" id="pages">
+        <div class="controls">
+            <button onclick="addPage()">Ajouter page</button>
+
+            <select onchange="changePaper(this.value)">
+                <option value="paper-lined">Lignes</option>
+                <option value="paper-grid">Quadrillage</option>
+                <option value="paper-dots">Pointillé</option>
+                <option value="paper-vintage">Crème</option>
+                <option value="paper-architect">Technique</option>
+                <option value="paper-blank">Blanc</option>
+                <option value="paper-planner">Planner</option>
+                <option value="paper-texture">Texture</option>
+            </select>
+
+            <select onchange="changeTabColor(this.value)">
+                <option value="">Couleur onglet</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+
+</div>
+
+<script>
+
+/* 40 couleurs */
+const colors=[
+"#E1E3E3","#DFD8D5","#D8D5D2","#E6D4C4","#BAB1B0","#898684",
+"#F2F8F8","#C3CED1","#B1A6A6","#B0AEB4","#A2A09A","#6F6869",
+"#E8E7E7","#EEE9E9","#D5C7B3","#E2D7D4","#B0A19F","#C09D89",
+"#D0CFCD","#E9F0F0","#E4DDD4","#B1B6AF","#D7D8D2","#B6AD9E",
+"#DFE5E5","#E4E9EC","#B8BFBA","#8F877F","#859A9E","#BDD2E0",
+"#F8FCFD","#E9EDEE","#CFCFD4","#E2DFD7","#E2D5D5","#DED0C7",
+"#F6F2F0","#D4C1BA","#D0C9CB","#C1B2B1"
+];
+
+/* select couleur */
+const colorSelect=document.querySelector("select[onchange^='changeTabColor']");
+colors.forEach(c=>{
+    let o=document.createElement("option");
+    o.value=c;
+    o.textContent=c;
+    colorSelect.appendChild(o);
+});
+
+/* données */
+let tabs=[];
+let currentTab=0;
+
+/* créer onglet */
+function createTab(){
+    const tab={
+        color:colors[Math.floor(Math.random()*colors.length)],
+        pages:["page"]
+    };
+    tabs.push(tab);
+    renderTabs();
+}
+
+/* affichage onglets */
+function renderTabs(){
+    const container=document.getElementById("tabs");
+    container.innerHTML="";
+    tabs.forEach((t,i)=>{
+        const el=document.createElement("div");
+        el.className="tab";
+        el.style.background=t.color;
+        el.textContent=i+1;
+        el.onclick=()=>selectTab(i);
+        container.appendChild(el);
+    });
+}
+
+/* sélection onglet */
+function selectTab(i){
+    currentTab=i;
+    renderPages();
+}
+
+/* pages */
+function renderPages(){
+    const pagesDiv=document.getElementById("pages");
+    const old=document.querySelectorAll(".page");
+    old.forEach(p=>p.remove());
+
+    tabs[currentTab].pages.forEach((p,i)=>{
+        const page=document.createElement("div");
+        page.className="page paper-lined";
+        if(i===0) page.classList.add("active");
+        page.contentEditable=true;
+        page.innerHTML="Page "+(i+1);
+        pagesDiv.appendChild(page);
+    });
+}
+
+/* ajouter page infinie */
+function addPage(){
+    tabs[currentTab].pages.push("page");
+    renderPages();
+}
+
+/* changer style papier */
+function changePaper(style){
+    document.querySelectorAll(".page").forEach(p=>{
+        p.className="page "+style;
+    });
+}
+
+/* changer couleur onglet */
+function changeTabColor(color){
+    tabs[currentTab].color=color;
+    renderTabs();
+}
+
+/* init */
+createTab();
+createTab();
+renderPages();
+
+</script>
+</body>
+</html>
