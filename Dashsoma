@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sōma Book - Ultimate Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --cover-bg: #E1E3E3; --page-color: #ffffff; --review-text: #5a4d44; }
+
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            font-family: 'Inter', sans-serif; background-color: #f0f0f0; 
+            overflow: hidden; display: flex; justify-content: center; align-items: center;
+        }
+
+        .grain { position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.04; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+
+        #book-wrapper {
+            width: 100vw; height: 100vh;
+            background: var(--page-color); position: relative;
+            overflow: hidden; transition: background 0.3s ease;
+        }
+
+        /* --- COUVERTURE --- */
+        #cover { 
+            position: absolute; inset: 0; background-color: var(--cover-bg); 
+            z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: space-between; 
+            padding: 10% 20px; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+            cursor: pointer; background-size: cover; background-position: center;
+        }
+        #cover.opened { transform: translateX(-100%); }
+
+        /* --- ONGLETS --- */
+        #tabs-container { 
+            position: absolute; right: 0; top: 60px; 
+            display: flex; flex-direction: column; gap: 2px; z-index: 2; 
+        }
+        .tab { 
+            width: 45px; height: 50px; border-radius: 8px 0 0 8px; 
+            cursor: pointer; transition: transform 0.4s ease, opacity 0.4s; 
+            display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;
+            box-shadow: -2px 2px 5px rgba(0,0,0,0.1);
+        }
+        .tab.hidden-left { transform: translateX(60px); opacity: 0; pointer-events: none; }
+
+        /* --- PAGES --- */
+        #pages-slider {
+            width: 100%; height: 100%;
+            display: flex; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .page-surface {
+            min-width: 100vw; height: 100vh;
+            box-sizing: border-box; padding: 100px 10% 40px 10%;
+            position: relative; outline: none; overflow-y: auto;
+        }
+
+        /* --- NAVIGATION --- */
+        .nav-zone {
+            position: absolute; top: 0; bottom: 0; width: 100px;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; cursor: pointer; transition: 0.3s;
+            writing-mode: vertical-rl; text-transform: uppercase; font-size: 10px;
+            letter-spacing: 4px; font-weight: 600; opacity: 0.2;
+        }
+        .nav-zone:hover { opacity: 0.8; background: rgba(0,0,0,0.02); }
+        .nav-next { right: 0; }
+        .nav-prev { left: 0; transform: rotate(180deg); }
+
+        /* --- TOOLBAR --- */
+        .toolbar-top {
+            position: absolute; top: 25px; right: 60px;
+            display: flex; gap: 25px; z-index: 1100;
+        }
+        .tool-icon { cursor: pointer; opacity: 0.6; transition: 0.3s; }
+        .tool-icon:hover { opacity: 1; transform: scale(1.1); }
+        .tool-icon svg { width: 24px; height: 24px; stroke: #333; }
+
+        /* --- WIDGET & IMAGES --- */
+        .review-card {
+            border: 1px solid #333; padding: 25px; background: #fff; max-width: 850px;
+            margin: 20px auto; color: var(--review-text); text-align: left; pointer-events: auto;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+        .rev-top-section { display: grid; grid-template-columns: 180px 1fr; gap: 30px; }
+        .rev-photo-box { width: 180px; height: 260px; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999; cursor: pointer; background-size: cover; background-position: center; }
+        
+        .rev-form-grid { display: flex; flex-direction: column; gap: 10px; }
+        .rev-field { border-bottom: 1px solid #eee; display: flex; align-items: baseline; gap: 10px; padding: 5px 0; }
+        .rev-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; min-width: 80px; }
+        .rev-input { border: none; outline: none; flex: 1; font-family: 'Inter'; font-size: 13px; background: transparent; }
+        
+        .rev-rating-area { margin-top: 10px; cursor: pointer; font-size: 22px; user-select: none; }
+        .rev-rating-area span.active { color: #f1c40f; }
+
+        .rev-bottom-section { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        .rev-block { border: 1px solid #eee; padding: 15px; min-height: 120px; position: relative; }
+        .rev-block-label { position: absolute; top: -8px; left: 10px; background: #fff; padding: 0 5px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
+        .rev-content { outline: none; font-size: 13px; line-height: 1.6; }
+
+        /* Notification style iMessage */
+        .imessage-notif {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 18px; padding: 12px 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 15px; border: 1px solid rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; gap: 4px;
+            animation: slideIn 0.5s ease;
+        }
+        .imessage-header { display: flex; justify-content: space-between; font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; }
+        .imessage-body { font-size: 13px; color: #000; line-height: 1.4; }
+
+        .sticker { max-width: 150px; cursor: move; user-select: none; display: inline-block; }
+
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Modals */
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 20px; z-index: 10001; width: 320px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 10000; backdrop-filter: blur(4px); }
+        .btn-opt { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid #eee; background: #fff; border-radius: 10px; cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        #ratingSwitcher { display: none; position: fixed; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 20000; padding: 10px; }
+        .palette-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin-top: 15px; }
+        .color-dot { width: 100%; aspect-ratio: 1; border-radius: 4px; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+    <div id="overlay" onclick="closeModals()"></div>
+
+    <div id="ratingSwitcher">
+        <button class="btn-opt" onclick="setRatingSymbol('★', '☆')">ÉTOILES (★)</button>
+        <button class="btn-opt" onclick="setRatingSymbol('♥', '♡')">COEURS (♥)</button>
+        <button class="btn-opt" onclick="setRatingSymbol('🔥', '⚪')">FEU (🔥)</button>
+    </div>
+
+    <div id="book-wrapper">
+        <div class="toolbar-top">
+            <div class="tool-icon" onclick="openModal('reviewPopup')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+            <div class="tool-icon" onclick="document.getElementById('stickerUpload').click()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </div>
+            <div class="tool-icon" onclick="openModal('paperModal')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+            </div>
+            <div class="tool-icon" onclick="openModal('colorModal')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            </div>
+        </div>
+
+        <input type="file" id="imgUpload" hidden onchange="handleImage(this)">
+        <input type="file" id="revImgUpload" hidden onchange="handleRevImage(this)">
+        <input type="file" id="stickerUpload" hidden onchange="handleSticker(this)">
+
+        <div id="tabs-container"></div>
+
+        <div id="cover" onclick="openBook()">
+            <div style="font-family: 'Playfair Display', serif; font-size: 60px; letter-spacing: 5px;">Sōma Book</div>
+            <div onclick="event.stopPropagation()">
+                <input type="text" id="userName" placeholder="PRÉNOM ET NOM" style="border:none; border-bottom:2px solid #000; text-align: center; font-size: 18px; width: 350px; background: transparent; letter-spacing: 5px; text-transform: uppercase; outline:none;">
+            </div>
+            <div style="font-size: 32px; letter-spacing: 15px; font-weight: 300;">SŌMA</div>
+        </div>
+
+        <div class="nav-zone nav-prev" onclick="prevPage()">← Revenir</div>
+        <div class="nav-zone nav-next" onclick="nextPage()">Tourner la page →</div>
+        <div id="pages-slider"></div>
+    </div>
+
+    <div id="reviewPopup" class="modal">
+        <p style="font-size: 11px; font-weight: bold; margin-bottom: 15px;">NOUVELLE FICHE</p>
+        <button class="btn-opt" onclick="insertReviewWidget()">CRÉER UNE REVIEW</button>
+        <button class="btn-opt" style="color:red;" onclick="closeModals()">Fermer</button>
+    </div>
+
+    <div id="paperModal" class="modal">
+        <button class="btn-opt" onclick="changePaper('paper-lined')">Ligné</button>
+        <button class="btn-opt" onclick="changePaper('paper-grid')">Quadrillé</button>
+        <button class="btn-opt" onclick="changePaper('paper-dots')">Pointillés</button>
+    </div>
+
+    <div id="colorModal" class="modal">
+        <div class="palette-grid" id="paletteGrid"></div>
+    </div>
+
+    <script>
+        const colors = ["#FDFBF7","#E1E3E3","#DFD8D5","#D8D5D2","#E6D4C4","#BAB1B0","#898684","#F2F8F8","#C3CED1","#B1A6A6","#B0AEB4","#A2A09A","#6F6869","#E8E7E7","#EEE9E9","#D5C7B3","#E2D7D4","#B0A19F","#C09D89","#D0CFCD","#E9F0F0","#E4DDD4","#B1B6AF","#D7D8D2","#B6AD9E","#DFE5E5","#E4E9EC","#B8BFBA","#8F877F","#859A9E","#BDD2E0","#F8FCFD","#E9EDEE","#CFCFD4","#E2DFD7","#E2D5D5","#DED0C7","#F6F2F0","#D4C1BA","#D0C9CB","#C1B2B1"];
+        let tabsData = JSON.parse(localStorage.getItem('soma_v5')) || [{ color: "#E1E3E3", content: "", paper: "paper-lined", paperColor: "#ffffff" }];
+        let currentIdx = 0;
+        let lastRevBox = null;
+        let pressTimer;
+        let activeRatingEl = null;
+
+        function openBook() { document.getElementById('cover').classList.add('opened'); initBook(); }
+        function initBook() { renderPages(); updateNavigation(); }
+
+        function renderPages() {
+            const slider = document.getElementById('pages-slider');
+            slider.innerHTML = "";
+            tabsData.forEach((page, i) => {
+                const div = document.createElement('div');
+                div.className = `page-surface ${page.paper}`;
+                div.style.backgroundColor = page.paperColor || "#ffffff";
+                div.contentEditable = true;
+                div.innerHTML = page.content;
+                div.oninput = () => { tabsData[i].content = div.innerHTML; save(); };
+                slider.appendChild(div);
+            });
+            const container = document.getElementById('tabs-container');
+            container.innerHTML = "";
+            tabsData.forEach((t, i) => {
+                const el = document.createElement("div"); el.className = "tab"; el.style.background = t.color; el.textContent = i + 1; el.onclick = () => goToPage(i); container.appendChild(el);
+            });
+        }
+
+        function insertReviewWidget() {
+            const widget = `
+                <div class="review-card" contenteditable="false">
+                    <div class="rev-top-section">
+                        <div class="rev-photo-box" onclick="triggerRevImg(this)">AJOUTER UNE COUVERTURE</div>
+                        <div class="rev-form-grid">
+                            <div class="rev-field"><span class="rev-label">Titre</span><input class="rev-input" type="text" placeholder="Le nom du livre..."></div>
+                            <div class="rev-field"><span class="rev-label">Auteur</span><input class="rev-input" type="text" placeholder="Qui a écrit ce livre ?"></div>
+                            <div class="rev-field"><span class="rev-label">Genre</span><input class="rev-input" type="text" placeholder="Roman, Manga, etc."></div>
+                            <div class="rev-field"><span class="rev-label">Total Pages</span><input class="rev-input total-pg" type="number" oninput="checkReadingStatus(this)"></div>
+                            <div class="rev-field"><span class="rev-label">Lu</span><input class="rev-input read-pg" type="number" oninput="checkReadingStatus(this)"></div>
+                            <div class="rev-field"><span class="rev-label">Début</span><input class="rev-input date-start" type="date" oninput="checkReadingStatus(this)"></div>
+                            <div class="rev-field"><span class="rev-label">Fin Prévue</span><input class="rev-input date-end" type="date" oninput="checkReadingStatus(this)"></div>
+                            <div class="rev-rating-area" onmousedown="startPress(event, this)" onmouseup="endPress()" ontouchstart="startPress(event, this)" ontouchend="endPress()" onclick="setWidgetRating(event, this)">
+                                <span>☆☆☆☆☆</span>
+                            </div>
+                            <div class="notif-container"></div>
+                        </div>
+                    </div>
+                    <div class="rev-bottom-section">
+                        <div class="rev-block"><span class="rev-block-label">Résumé & Avis</span><div class="rev-content" contenteditable="true">...</div></div>
+                        <div class="rev-block"><span class="rev-block-label">Citation</span><div class="rev-content" contenteditable="true">"..."</div></div>
+                    </div>
+                </div><br>`;
+            const pages = document.querySelectorAll('.page-surface');
+            pages[currentIdx].innerHTML += widget;
+            save();
+            closeModals();
+        }
+
+        function checkReadingStatus(el) {
+            const card = el.closest('.review-card');
+            const total = parseInt(card.querySelector('.total-pg').value);
+            const read = parseInt(card.querySelector('.read-pg').value);
+            const endStr = card.querySelector('.date-end').value;
+            const container = card.querySelector('.notif-container');
+            
+            if (!total || !endStr || read >= total) { container.innerHTML = ""; return; }
+
+            const endDate = new Date(endStr);
+            const today = new Date();
+            const diffTime = endDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const pagesLeft = total - read;
+
+            if (diffDays <= 0) {
+                container.innerHTML = `
+                    <div class="imessage-notif">
+                        <div class="imessage-header"><span>SŌMA BOOK</span><span>Maintenant</span></div>
+                        <div class="imessage-body">Tu as du retard ! 🚨 Il te reste <b>${pagesLeft} pages</b>. Lis tout aujourd'hui pour finir à temps !</div>
+                    </div>`;
+            } else if (diffDays < 7) {
+                const perDay = Math.ceil(pagesLeft / diffDays);
+                container.innerHTML = `
+                    <div class="imessage-notif">
+                        <div class="imessage-header"><span>SŌMA BOOK</span><span>Maintenant</span></div>
+                        <div class="imessage-body">Courage ! Il te reste <b>${diffDays} jours</b>. Tu dois lire <b>${perDay} pages/jour</b> pour finir. 📖</div>
+                    </div>`;
+            } else { container.innerHTML = ""; }
+            save();
+        }
+
+        function handleSticker(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = `<img src="${e.target.result}" class="sticker" style="width:120px" onclick="this.style.width=(parseInt(this.style.width)+20)+'px'">`;
+                    const pages = document.querySelectorAll('.page-surface');
+                    pages[currentIdx].innerHTML += img;
+                    save();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function startPress(e, el) { activeRatingEl = el; pressTimer = window.setTimeout(() => {
+            const switcher = document.getElementById('ratingSwitcher');
+            switcher.style.display = 'block'; switcher.style.left = (e.clientX || e.touches[0].clientX) + 'px'; switcher.style.top = (e.clientY || e.touches[0].clientY) + 'px';
+        }, 800); }
+        function endPress() { clearTimeout(pressTimer); }
+
+        function setRatingSymbol(full, empty) {
+            if(activeRatingEl) { activeRatingEl.setAttribute('data-full', full); activeRatingEl.setAttribute('data-empty', empty); activeRatingEl.querySelector('span').innerHTML = empty.repeat(5); }
+            closeModals(); save();
+        }
+
+        function setWidgetRating(e, el) {
+            if(document.getElementById('ratingSwitcher').style.display === 'block') return;
+            const full = el.getAttribute('data-full') || '★', empty = el.getAttribute('data-empty') || '☆';
+            const rect = el.getBoundingClientRect();
+            const count = Math.ceil(((e.clientX - rect.left) / rect.width) * 5);
+            el.querySelector('span').innerHTML = `<span class="active">${full.repeat(count)}</span>${empty.repeat(5-count)}`;
+            save();
+        }
+
+        function triggerRevImg(el) { lastRevBox = el; document.getElementById('revImgUpload').click(); }
+        function handleRevImage(input) {
+            if (input.files && input.files[0] && lastRevBox) {
+                const reader = new FileReader();
+                reader.onload = e => { lastRevBox.style.backgroundImage = `url(${e.target.result})`; lastRevBox.textContent = ""; save(); };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function updateNavigation() {
+            document.getElementById('pages-slider').style.transform = `translateX(-${currentIdx * 100}vw)`;
+            const allTabs = document.querySelectorAll('.tab');
+            allTabs.forEach((tab, i) => { if (i < currentIdx) tab.classList.add('hidden-left'); else tab.classList.remove('hidden-left'); });
+        }
+        function nextPage() {
+            if (currentIdx < tabsData.length - 1) { currentIdx++; } 
+            else { tabsData.push({ color: colors[Math.floor(Math.random()*colors.length)], content: "", paper: "paper-lined", paperColor: "#ffffff" }); renderPages(); currentIdx++; }
+            updateNavigation(); save();
+        }
+        function prevPage() { if (currentIdx > 0) { currentIdx--; updateNavigation(); } else { document.getElementById('cover').classList.remove('opened'); } }
+        function goToPage(i) { currentIdx = i; updateNavigation(); }
+        function changePaper(style) { tabsData[currentIdx].paper = style; renderPages(); closeModals(); save(); }
+        function openModal(id) { document.getElementById(id).style.display='block'; document.getElementById('overlay').style.display='block'; }
+        function closeModals() { document.querySelectorAll('.modal, #ratingSwitcher').forEach(m=>m.style.display='none'); document.getElementById('overlay').style.display='none'; }
+
+        function save() { 
+            const slider = document.getElementById('pages-slider');
+            if(slider && slider.children[currentIdx]) tabsData[currentIdx].content = slider.children[currentIdx].innerHTML;
+            localStorage.setItem('soma_v5', JSON.stringify(tabsData)); 
+        }
+
+        const grid = document.getElementById('paletteGrid');
+        colors.forEach(c => {
+            const d = document.createElement('div'); d.className = 'color-dot'; d.style.background = c;
+            d.onclick = () => { tabsData[currentIdx].color = c; renderPages(); closeModals(); save(); };
+            grid.appendChild(d);
+        });
+
+        window.onload = () => {
+            const author = localStorage.getItem('soma_user'); if(author) document.getElementById('userName').value = author;
+            initBook();
+        };
+    </script>
+</body>
+</html>
