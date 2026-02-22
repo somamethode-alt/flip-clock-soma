@@ -294,50 +294,6 @@
         function triggerRevImg(el) { lastRevBox = el; document.getElementById('revImgUpload').click(); }
         function handleRevImage(i) { if (i.files[0]) { const r = new FileReader(); r.onload = e => { lastRevBox.style.backgroundImage = `url(${e.target.result})`; lastRevBox.textContent = ""; save(); }; r.readAsDataURL(i.files[0]); } }
         
-        function fetchBookInfo(isbn) {
-            console.log("ISBN détecté : " + isbn);
-            fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.items && data.items.length > 0) {
-                        const book = data.items[0].volumeInfo;
-                        const title = book.title;
-                        let cover = 'https://via.placeholder.com/128x192?text=No+Cover';
-                        if (book.imageLinks && book.imageLinks.thumbnail) {
-                            cover = book.imageLinks.thumbnail.replace('http://', 'https://');
-                        }
-                        addBookToLibrary(title, cover);
-                    } else {
-                        alert("Livre non trouvé dans la base Google.");
-                    }
-                })
-                .catch(err => alert("Erreur réseau : " + err));
-        }
-
-        function addBookToLibrary(title, coverUrl) {
-            const widget = `<div class="review-card" contenteditable="false">
-                <div class="rev-top-section">
-                    <div class="rev-photo-box" style="background-image:url(${coverUrl}); background-size:cover;" onclick="triggerRevImg(this)"></div>
-                    <div class="rev-form-grid">
-                        <div class="rev-field"><span class="rev-label">Titre</span><input class="rev-input b-title" type="text" value="${title}" oninput="this.setAttribute('value', this.value); save(); refreshGlobalNotifs()"></div>
-                        <div class="rev-field"><span class="rev-label">Total Pages</span><input class="rev-input total-pg" type="number" oninput="this.setAttribute('value', this.value); save(); refreshGlobalNotifs()"></div>
-                        <div class="rev-field"><span class="rev-label">Pages Lues</span><input class="rev-input read-pg" type="number" oninput="this.setAttribute('value', this.value); save(); refreshGlobalNotifs()"></div>
-                        <div class="rev-field"><span class="rev-label">Date Fin</span><input class="rev-input date-end" type="date" oninput="this.setAttribute('value', this.value); save(); refreshGlobalNotifs()"></div>
-                        <div class="rev-rating-area" onmousedown="startPress(this)" onmouseup="endPress(event, this)" ontouchstart="startPress(this)" ontouchend="endPress(event, this)">
-                            <div class="rating-selector-popup"><span onclick="changeSymbol('\u2605', this)">\u2605</span><span onclick="changeSymbol('\u2665', this)">\u2665</span><span onclick="changeSymbol('\uD83D\uDD25', this)">\uD83D\uDD25</span></div>
-                            <span class="stars-display">\u2606\u2606\u2606\u2606\u2606</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="rev-bottom-section">
-                    <div class="rev-block"><span class="rev-block-label">Avis</span><div class="rev-content" contenteditable="true">...</div></div>
-                    <div class="rev-block"><span class="rev-block-label">Citation</span><div class="rev-content" contenteditable="true">"..."</div></div>
-                </div>
-            </div><br>`;
-            document.querySelectorAll('.page-surface')[currentIdx].innerHTML += widget;
-            save(); refreshGlobalNotifs();
-        }
-
         function save() { 
             const slider = document.getElementById('pages-slider'); 
             if(slider && slider.children[currentIdx]) {
