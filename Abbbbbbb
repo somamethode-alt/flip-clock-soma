@@ -115,9 +115,9 @@
         <div id="tabs-container"></div>
         <div id="cover" onclick="openBook()">
             <div id="cover-notif-area" class="notif-area" onclick="event.stopPropagation()"></div>
-            <div style="font-family: 'Playfair Display', serif; font-size: 60px;">Soma Book</div>
-            <input type="text" id="userName" placeholder="PRENOM ET NOM" style="border:none; border-bottom:2px solid #000; text-align: center; font-size: 18px; width: 300px; background: transparent; outline:none;" onclick="event.stopPropagation()">
-            <div style="font-size: 32px; letter-spacing: 15px;">SOMA</div>
+            <div style="font-family: 'Playfair Display', serif; font-size: 60px;">Sōma Book</div>
+            <input type="text" id="userName" placeholder="PRÉNOM ET NOM" style="border:none; border-bottom:2px solid #000; text-align: center; font-size: 18px; width: 300px; background: transparent; outline:none;" onclick="event.stopPropagation()">
+            <div style="font-size: 32px; letter-spacing: 15px;">SŌMA</div>
         </div>
 
         <div class="nav-zone nav-prev" onclick="prevPage()">&#8592;</div>
@@ -134,9 +134,9 @@
     
     <div id="paperModal" class="modal">
         <button class="btn-opt" onclick="changePaper('paper-blank')">Vierge</button>
-        <button class="btn-opt" onclick="changePaper('paper-lined')">Ligne</button>
-        <button class="btn-opt" onclick="changePaper('paper-grid')">Quadrille</button>
-        <button class="btn-opt" onclick="changePaper('paper-dots')">Pointille</button>
+        <button class="btn-opt" onclick="changePaper('paper-lined')">Lign&#233;</button>
+        <button class="btn-opt" onclick="changePaper('paper-grid')">Quadrill&#233;</button>
+        <button class="btn-opt" onclick="changePaper('paper-dots')">Pointill&#233;</button>
     </div>
 
     <div id="colorModal" class="modal"><select id="colorTarget" class="btn-opt"><option value="tab">Onglet</option><option value="cover">Couverture</option><option value="page">Page</option></select><div class="palette-grid" id="colorPalette"></div></div>
@@ -187,6 +187,7 @@
             cards.forEach((card, cardIdx) => {
                 if (dismissedNotifs.includes(cardIdx)) return;
 
+                // On récupère via l'attribut value pour que cela marche même après reload
                 const title = card.querySelector('.b-title').getAttribute('value') || card.querySelector('.b-title').value || "";
                 const total = parseInt(card.querySelector('.total-pg').getAttribute('value') || card.querySelector('.total-pg').value);
                 const read = parseInt(card.querySelector('.read-pg').getAttribute('value') || card.querySelector('.read-pg').value);
@@ -201,12 +202,12 @@
                     const perDay = Math.ceil(pagesToRead / diffDays);
                     
                     let msg = `Il te reste ${pagesToRead} pages pour finir "${title}". Tu devrais lire environ ${perDay} pages par jour !`;
-                    if (diffTime < 0) msg = `Tu as depasse la date pour "${title}". Il te reste ${pagesToRead} pages !`;
+                    if (diffTime < 0) msg = `Tu as dépassé la date pour "${title}". Il te reste ${pagesToRead} pages !`;
 
                     areas.forEach(area => {
                         const notif = document.createElement('div');
                         notif.className = "imessage-notif";
-                        notif.innerHTML = `<div class="imessage-header"><span>SOMA BOOK</span><span>maintenant</span></div><div class="imessage-body">${msg}</div><div class="imessage-footer">Signe, Fondatrice Soma</div>`;
+                        notif.innerHTML = `<div class="imessage-header"><span>SŌMA BOOK</span><span>maintenant</span></div><div class="imessage-body">${msg}</div><div class="imessage-footer">Signé, Fondatrice Sōma</div>`;
                         notif.onclick = (e) => { 
                             e.stopPropagation(); 
                             dismissedNotifs.push(cardIdx); 
