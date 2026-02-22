@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --active-color: #D4C5E2;
+            --glass: rgba(255, 255, 255, 0.4);
+            --text-main: #5D576B;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: transparent;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 30px;
+            width: 240px; /* Taille réduite */
+            height: 340px; /* Taille réduite */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03);
+        }
+
+        .title {
+            font-size: 9px;
+            letter-spacing: 2px;
+            font-weight: 600;
+            color: var(--text-main);
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .timer-container {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .tick {
+            position: absolute;
+            width: 1.5px;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.08);
+            left: 50%;
+            top: 50%;
+            transform-origin: 50% -70px;
+            transition: background 0.4s ease;
+        }
+
+        .tick.active {
+            background: var(--active-color) !important;
+            box-shadow: 0 0 5px var(--active-color);
+        }
+
+        .digits {
+            font-size: 26px; /* Taille réduite */
+            font-weight: 700;
+            color: var(--active-color); 
+            margin: 0;
+            transition: color 0.4s ease;
+        }
+
+        .sub-text {
+            font-size: 9px;
+            color: var(--text-main);
+            opacity: 0.6;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        input[type="datetime-local"] {
+            flex: 1;
+            background: #ffffff;
+            border: 1.5px solid rgba(0, 0, 0, 0.15); /* Plus visible */
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            color: var(--text-main);
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Bouton palette minimaliste (juste un cercle) */
+        .palette-trigger {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--active-color);
+            border: 2px solid white;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .palette-menu {
+            position: absolute;
+            bottom: 60px;
+            right: 20px;
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 10;
+        }
+
+        .color-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .footer { font-size: 7px; opacity: 0.2; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="glass-card">
+    <div class="title">Objectif Examen</div>
+
+    <div class="timer-container">
+        <div id="ticks"></div>
+        <div class="time-content" style="position: absolute; text-align: center;">
+            <div class="digits" id="timeDisplay">--:--</div>
+            <div class="sub-text" id="statusLabel">définir date</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <input type="datetime-local" id="examDate" onchange="startTimer()">
+        <div class="palette-trigger" onclick="togglePalette()"></div>
+    </div>
+
+    <div class="palette-menu" id="paletteMenu"></div>
+    <div class="footer">SŌMA DESIGN</div>
+</div>
+
+<script>
+    const pastelColors = ['#D4C5E2', '#B5D8CC', '#F3D1C1', '#C7CEEA', '#FFDAC1', '#E2F0CB', '#B2E2F2', '#F9E1E0', '#E8DFF5', '#FCF6BD', '#D0E1D4', '#E4C1F9', '#A9DEF9', '#F694C1', '#EDE7D9', '#A1CCD1', '#E9B3B3', '#D3D3D3', '#C1C8E4', '#84A59D'];
+    const menu = document.getElementById('paletteMenu');
+    pastelColors.forEach(color => {
+        const dot = document.createElement('div');
+        dot.className = 'color-dot';
+        dot.style.background = color;
+        dot.onclick = () => {
+            document.documentElement.style.setProperty('--active-color', color);
+            togglePalette();
+        };
+        menu.appendChild(dot);
+    });
+
+    const ticksBox = document.getElementById('ticks');
+    const tickElements = [];
+    for (let i = 0; i < 60; i++) {
+        const tick = document.createElement('div');
+        tick.className = 'tick';
+        tick.style.transform = `translateX(-50%) translateY(70px) rotate(${i * 6}deg)`;
+        ticksBox.appendChild(tick);
+        tickElements.push(tick);
+    }
+
+    function togglePalette() {
+        const m = document.getElementById('paletteMenu');
+        m.style.display = m.style.display === 'grid' ? 'none' : 'grid';
+    }
+
+    let countdown;
+    let currentTick = 0;
+
+    function startTimer() {
+        clearInterval(countdown);
+        const target = new Date(document.getElementById('examDate').value).getTime();
+        if (isNaN(target)) return;
+        countdown = setInterval(() => {
+            const now = Date.now();
+            const diff = target - now;
+            tickElements.forEach(t => t.classList.remove('active'));
+            currentTick = (currentTick + 1) % 60;
+            tickElements[currentTick].classList.add('active');
+            if (diff <= 0) {
+                clearInterval(countdown);
+                document.getElementById('timeDisplay').innerText = "00:00";
+                return;
+            }
+            const j = Math.floor(diff / 86400000);
+            const h = Math.floor((diff % 86400000) / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            document.getElementById('timeDisplay').innerText = j > 0 ? `${j}j ${h}h` : `${h}:${m.toString().padStart(2, '0')}`;
+            document.getElementById('statusLabel').innerText = j > 0 ? "restants" : "temps restant";
+        }, 1000);
+    }
+</script>
+</body>
+</html>
