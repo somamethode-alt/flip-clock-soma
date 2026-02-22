@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+:root {
+    --widget-bg: #e7def6;
+    --widget-text: #4b4453;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Aligne le contenu tout en haut */
+    background: transparent;
+    font-family: -apple-system, sans-serif;
+    overflow: hidden;
+    height: fit-content; /* S'adapte au contenu uniquement */
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-top: 5px; /* Un petit décalage pour ne pas coller le bord haut */
+}
+
+.clock-row {
+    display: flex;
+    gap: 6px;
+}
+
+.unit-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.book-flip {
+    width: 42px; /* Un peu plus petit pour garantir le passage en largeur */
+    height: 50px;
+    background: var(--widget-bg);
+    color: var(--widget-text);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.label {
+    font-size: 8px;
+    color: #b0a5bd;
+    font-weight: 600;
+}
+
+.palette {
+    display: flex;
+    gap: 6px;
+}
+
+.color-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.credit {
+    font-size: 8px;
+    color: #d1d1d1;
+    margin-top: 2px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="clock-row">
+        <div class="unit-group">
+            <div class="book-flip" id="h">00</div>
+            <div class="label">H</div>
+        </div>
+        <div class="unit-group">
+            <div class="book-flip" id="m">00</div>
+            <div class="label">M</div>
+        </div>
+        <div class="unit-group">
+            <div class="book-flip" id="s">00</div>
+            <div class="label">S</div>
+        </div>
+    </div>
+
+    <div class="palette">
+        <div class="color-dot" style="background:#e7def6;" onclick="changeColor('#e7def6', '#4b4453')"></div>
+        <div class="color-dot" style="background:#fbe4d8;" onclick="changeColor('#fbe4d8', '#6b544a')"></div>
+        <div class="color-dot" style="background:#e2f3e8;" onclick="changeColor('#e2f3e8', '#4a6b58')"></div>
+        <div class="color-dot" style="background:#d8e8fb;" onclick="changeColor('#d8e8fb', '#4a5b6b')"></div>
+    </div>
+    <div class="credit">Design — Sōma</div>
+</div>
+
+<script>
+function update() {
+    const n = new Date();
+    document.getElementById('h').innerText = String(n.getHours()).padStart(2,'0');
+    document.getElementById('m').innerText = String(n.getMinutes()).padStart(2,'0');
+    document.getElementById('s').innerText = String(n.getSeconds()).padStart(2,'0');
+}
+function changeColor(b, t) {
+    document.documentElement.style.setProperty('--widget-bg', b);
+    document.documentElement.style.setProperty('--widget-text', t);
+}
+setInterval(update, 1000);
+update();
+</script>
+</body>
+</html>
